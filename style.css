@@ -1,0 +1,26 @@
+body {
+    min-height: 100vh;
+    background-image: url("pixel-art-farm-landscape-with-barn-mill-fence-trees-8-bit-game-background-vector.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.card {
+    background-color: rgba(255,255,255,0.9);
+}
+
+.parcela-vacia {
+    background-color: #8B4513;
+    color: white;
+}
+
+.parcela-creciendo {
+    background-color: #f0ad4e;
+    color: black;
+}
+
+.parcela-madura {
+    background-color: #5cb85c;
+    color: white;
+}
