@@ -24,3 +24,9 @@ body {
     background-color: #5cb85c;
     color: white;
 }
+
+img {
+    height: 100px;
+    width: 50px;
+    object-fit: contain;
+}

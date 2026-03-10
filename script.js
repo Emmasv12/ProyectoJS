@@ -135,37 +135,39 @@ class Juego {
     const terrenoDiv = document.getElementById("terreno");
     terrenoDiv.innerHTML = "";
 
-    this.terreno.parcelas.forEach((parcela, index) => {
+        this.terreno.parcelas.forEach((parcela, index) => {
 
-        const col = document.createElement("div");
-        col.classList.add("col-3");
+            const col = document.createElement("div");
+            col.classList.add("col-3");
 
-        const card = document.createElement("div");
-        card.classList.add("card", "text-center", "p-3");
+            const card = document.createElement("div");
+            card.classList.add("card", "text-center", "p-2");
 
-        if (parcela.cultivo) {
-            if (parcela.cultivo.estaMaduro()) {
-                card.classList.add("parcela-madura");
-                card.textContent = parcela.cultivo.nombre;
+            const img = document.createElement("img");
+            img.style.width = "100%";
+
+            if (parcela.cultivo) {
+                if (parcela.cultivo.estaMaduro()) {
+                    img.src = "ChatGPT Image 10 mar 2026, 16_21_45.png";
+                } else {
+                    img.src = "ChatGPT Image 10 mar 2026, 16_11_30.png";
+                }
             } else {
-                card.classList.add("parcela-creciendo");
-                card.textContent = "Creciendo";
+                img.src = "ChatGPT Image 10 mar 2026, 16_09_26.png";
             }
-        } else {
-            card.classList.add("parcela-vacia");
-            card.textContent = "Vacío";
-        }
 
-        card.style.cursor = "pointer";
+            card.appendChild(img);
 
-        card.addEventListener("click", () => {
-            this.interactuarParcela(index);
+            card.style.cursor = "pointer";
+
+            card.addEventListener("click", () => {
+                this.interactuarParcela(index);
+            });
+
+            col.appendChild(card);
+            terrenoDiv.appendChild(col);
         });
-
-        col.appendChild(card);
-        terrenoDiv.appendChild(col);
-    });
-}
+    }
 
     interactuarParcela(index) {
         const parcela = this.terreno.parcelas[index];
