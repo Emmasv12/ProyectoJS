@@ -1,111 +1,36 @@
-class Semilla {
-    constructor(nombre, tiempoMaduracion, precioVenta) {
-        this.nombre = nombre;
-        this.tiempoMaduracion = tiempoMaduracion;
-        this.precioVenta = precioVenta;
-    }
-}
-
-class Cultivo {
-    constructor(semilla) {
-        this.nombre = semilla.nombre;
-        this.tiempoRestante = semilla.tiempoMaduracion;
-        this.precioVenta = semilla.precioVenta;
-    }
-
-    crecer() {
-        if (this.tiempoRestante > 0) {
-            this.tiempoRestante--;
-        }
-    }
-
-    estaMaduro() {
-        return this.tiempoRestante === 0;
-    }
-}
-
-class Herramienta {
-    constructor(nombre, nivel = 1) {
-        this.nombre = nombre;
-        this.nivel = nivel;
-    }
-}
-
-class Granjero {
-    constructor(nombre) {
-        this.nombre = nombre;
-        this.dinero = 100;
-        this.energia = 100;
-        this.inventario = [];
-        this.herramientas = {
-            azada: new Herramienta("Azada"),
-            regadera: new Herramienta("Regadera"),
-            hoz: new Herramienta("Hoz")
-        };
-    }
-
-    agregarSemilla(semilla) {
-        this.inventario.push(semilla);
-    }
-
-    vender(cultivo) {
-        this.dinero += cultivo.precioVenta;
-    }
-}
-
-class Parcela {
-    constructor() {
-        this.cultivo = null;
-    }
-
-    plantar(semilla) {
-        if (!this.cultivo) {
-            this.cultivo = new Cultivo(semilla);
-        }
-    }
-
-    recolectar() {
-        if (this.cultivo && this.cultivo.estaMaduro()) {
-            const cultivoRecolectado = this.cultivo;
-            this.cultivo = null;
-            return cultivoRecolectado;
-        }
-        return null;
-    }
-}
-
-class Terreno {
-    constructor(tamano) {
-        this.parcelas = [];
-        for (let i = 0; i < tamano; i++) {
-            this.parcelas.push(new Parcela());
-        }
-    }
-}
-
 class Juego {
-    constructor() {
+
+    constructor(datosGuardados = null) {
+
         this.granjero = new Granjero("Emma");
         this.terreno = new Terreno(8);
+
         this.semillasDisponibles = [
             new Semilla("Tomate", 3, 20),
             new Semilla("Zanahoria", 2, 15)
         ];
-        this.iniciarEventos();
+
+        new Botones(this);
+
+        // CARGAR PARTIDA SI EXISTE
+        if (datosGuardados) {
+
+            this.granjero.dinero = datosGuardados.dinero;
+            this.granjero.energia = datosGuardados.energia;
+
+            datosGuardados.inventario.forEach(s => {
+
+                this.granjero.inventario.push(
+                    new Semilla(s.nombre, s.tiempoMaduracion, s.precioVenta)
+                );
+
+            });
+
+        }
+
         this.render();
         this.iniciarCrecimiento();
-    }
 
-    iniciarEventos() {
-        document.getElementById("btnRecargar").addEventListener("click", () => {
-            this.granjero.agregarSemilla(this.semillasDisponibles[0]);
-            this.granjero.agregarSemilla(this.semillasDisponibles[1]);
-            this.render();
-        });
-
-        document.getElementById("btnGuardar").addEventListener("click", () => {
-            this.guardar();
-        });
     }
 
     render() {
@@ -114,7 +39,9 @@ class Juego {
         this.mostrarTerreno();
     }
 
+
     iniciarCrecimiento() {
+
         setInterval(() => {
 
             this.terreno.parcelas.forEach(parcela => {
@@ -128,29 +55,40 @@ class Juego {
             this.render();
 
         }, 5000);
+
     }
 
+
     mostrarInfo() {
+
         const info = document.getElementById("info-granjero");
+
         info.innerHTML = `
             <h5>Granjero</h5>
             <p>Nombre: ${this.granjero.nombre}</p>
             <p>Dinero: ${this.granjero.dinero}</p>
             <p>Energía: ${this.granjero.energia}</p>
         `;
+
     }
 
+
     mostrarInventario() {
+
         const inventario = document.getElementById("inventario");
+
         inventario.innerHTML = `
             <h5>Inventario</h5>
             <p>Semillas: ${this.granjero.inventario.length}</p>
         `;
+
     }
 
+
     mostrarTerreno() {
-    const terrenoDiv = document.getElementById("terreno");
-    terrenoDiv.innerHTML = "";
+
+        const terrenoDiv = document.getElementById("terreno");
+        terrenoDiv.innerHTML = "";
 
         this.terreno.parcelas.forEach((parcela, index) => {
 
@@ -164,13 +102,21 @@ class Juego {
             img.style.width = "100%";
 
             if (parcela.cultivo) {
+
                 if (parcela.cultivo.estaMaduro()) {
-                    img.src = "ChatGPT Image 10 mar 2026, 16_21_45.png";
+
+                    img.src = "planta inicial.png";
+
                 } else {
-                    img.src = "ChatGPT Image 10 mar 2026, 16_11_30.png";
+
+                    img.src = "semilla.png";
+
                 }
+
             } else {
-                img.src = "ChatGPT Image 10 mar 2026, 16_09_26.png";
+
+                img.src = "maceta.png";
+
             }
 
             card.appendChild(img);
@@ -183,38 +129,52 @@ class Juego {
 
             col.appendChild(card);
             terrenoDiv.appendChild(col);
+
         });
+
     }
 
+
     interactuarParcela(index) {
+
         const parcela = this.terreno.parcelas[index];
 
         if (!parcela.cultivo && this.granjero.inventario.length > 0) {
+
             const semilla = this.granjero.inventario.pop();
             parcela.plantar(semilla);
-        } else if (parcela.cultivo && parcela.cultivo.estaMaduro()) {
+
+        }
+
+        else if (parcela.cultivo && parcela.cultivo.estaMaduro()) {
+
             const cultivo = parcela.recolectar();
             this.granjero.vender(cultivo);
+
         }
 
         this.render();
+
     }
 
+
     guardar() {
+
         const datos = {
+
             dinero: this.granjero.dinero,
             energia: this.granjero.energia,
+
             inventario: this.granjero.inventario.map(s => ({
                 nombre: s.nombre,
                 tiempoMaduracion: s.tiempoMaduracion,
                 precioVenta: s.precioVenta
             }))
+
         };
 
         localStorage.setItem("partidaGranja", JSON.stringify(datos));
-    }
-}
 
-document.addEventListener("DOMContentLoaded", () => {
-    new Juego();
-});
+    }
+
+}
