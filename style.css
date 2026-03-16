@@ -1,13 +1,15 @@
 body {
+    font-family: 'ArcadeClassic', cursive;
+    image-rendering: pixelated;
     min-height: 100vh;
-    background-image: url("pixel-art-farm-landscape-with-barn-mill-fence-trees-8-bit-game-background-vector.jpg");
+    background-image: url("ChatGPT Image 10 mar 2026, 16_39_15.png");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
 }
 
 .card {
-    background-color: rgba(255,255,255,0.9);
+    background-color: rgba(255, 255, 255, 0.448);
 }
 
 .parcela-vacia {
@@ -26,7 +28,7 @@ body {
 }
 
 img {
-    height: 100px;
+    height: 150px;
     width: 50px;
     object-fit: contain;
 }

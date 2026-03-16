@@ -93,6 +93,7 @@ class Juego {
         ];
         this.iniciarEventos();
         this.render();
+        this.iniciarCrecimiento();
     }
 
     iniciarEventos() {
@@ -111,6 +112,22 @@ class Juego {
         this.mostrarInfo();
         this.mostrarInventario();
         this.mostrarTerreno();
+    }
+
+    iniciarCrecimiento() {
+        setInterval(() => {
+
+            this.terreno.parcelas.forEach(parcela => {
+
+                if (parcela.cultivo && !parcela.cultivo.estaMaduro()) {
+                    parcela.cultivo.crecer();
+                }
+
+            });
+
+            this.render();
+
+        }, 5000);
     }
 
     mostrarInfo() {
@@ -175,13 +192,9 @@ class Juego {
         if (!parcela.cultivo && this.granjero.inventario.length > 0) {
             const semilla = this.granjero.inventario.pop();
             parcela.plantar(semilla);
-        } else if (parcela.cultivo) {
-            parcela.cultivo.crecer();
-
-            if (parcela.cultivo.estaMaduro()) {
-                const cultivo = parcela.recolectar();
-                this.granjero.vender(cultivo);
-            }
+        } else if (parcela.cultivo && parcela.cultivo.estaMaduro()) {
+            const cultivo = parcela.recolectar();
+            this.granjero.vender(cultivo);
         }
 
         this.render();
