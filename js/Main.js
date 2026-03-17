@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-    new Menu();
+    new Juego();
 
 });

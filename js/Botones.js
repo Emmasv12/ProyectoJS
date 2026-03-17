@@ -9,8 +9,12 @@ class Botones {
 
         document.getElementById("btnRecargar").addEventListener("click", () => {
 
-            this.juego.granjero.agregarSemilla(this.juego.semillasDisponibles[0]);
-            this.juego.granjero.agregarSemilla(this.juego.semillasDisponibles[1]);
+            for (let i = 0; i < 2; i++) {
+                const random = Math.floor(Math.random() * this.juego.semillasDisponibles.length);
+                const semilla = this.juego.semillasDisponibles[random];
+
+                this.juego.granjero.agregarSemilla(semilla);
+            }
 
             this.juego.render();
 

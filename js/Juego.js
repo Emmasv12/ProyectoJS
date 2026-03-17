@@ -1,44 +1,75 @@
 class Juego {
 
-    constructor(datosGuardados = null) {
+    constructor() {
 
         this.granjero = new Granjero("Emma");
         this.terreno = new Terreno(8);
 
         this.semillasDisponibles = [
-            new Semilla("Tomate", 3, 20),
-            new Semilla("Zanahoria", 2, 15)
+
+            new Semilla(
+                "Tomate",
+                3,
+                20,
+                "semilla.png",
+                "tomate_creciendo.png",
+                "tomate_maduro.png"
+            ),
+
+            new Semilla(
+                "Zanahoria",
+                2,
+                15,
+                "semilla.png",
+                "zanahoria_creciendo.png",
+                "zanahoria_madura.png"
+            ),
+
+            new Semilla(
+                "Maíz",
+                4,
+                30,
+                "semilla.png",
+                "maiz_creciendo.png",
+                "maiz_maduro.png"
+            )
+
         ];
 
-        new Botones(this);
-
-        // CARGAR PARTIDA SI EXISTE
-        if (datosGuardados) {
-
-            this.granjero.dinero = datosGuardados.dinero;
-            this.granjero.energia = datosGuardados.energia;
-
-            datosGuardados.inventario.forEach(s => {
-
-                this.granjero.inventario.push(
-                    new Semilla(s.nombre, s.tiempoMaduracion, s.precioVenta)
-                );
-
-            });
-
-        }
-
+        this.iniciarEventos();
         this.render();
         this.iniciarCrecimiento();
 
     }
 
+    iniciarEventos() {
+
+        document.getElementById("btnRecargar").addEventListener("click", () => {
+
+            for (let i = 0; i < 2; i++) {
+
+                const random = Math.floor(Math.random() * this.semillasDisponibles.length);
+                const semilla = this.semillasDisponibles[random];
+
+                this.granjero.agregarSemilla(semilla);
+            }
+
+            this.render();
+        });
+
+        document.getElementById("btnGuardar").addEventListener("click", () => {
+            this.guardar();
+        });
+
+    }
+
     render() {
+
         this.mostrarInfo();
         this.mostrarInventario();
         this.mostrarTerreno();
-    }
 
+    }
 
     iniciarCrecimiento() {
 
@@ -58,7 +89,6 @@ class Juego {
 
     }
 
-
     mostrarInfo() {
 
         const info = document.getElementById("info-granjero");
@@ -69,9 +99,7 @@ class Juego {
             <p>Dinero: ${this.granjero.dinero}</p>
             <p>Energía: ${this.granjero.energia}</p>
         `;
-
     }
-
 
     mostrarInventario() {
 
@@ -81,9 +109,7 @@ class Juego {
             <h5>Inventario</h5>
             <p>Semillas: ${this.granjero.inventario.length}</p>
         `;
-
     }
-
 
     mostrarTerreno() {
 
@@ -103,14 +129,16 @@ class Juego {
 
             if (parcela.cultivo) {
 
-                if (parcela.cultivo.estaMaduro()) {
+                const fase = parcela.cultivo.obtenerFase();
 
-                    img.src = "planta inicial.png";
-
-                } else {
-
-                    img.src = "semilla.png";
-
+                if (fase === "semilla") {
+                    img.src = parcela.cultivo.imgSemilla;
+                }
+                else if (fase === "creciendo") {
+                    img.src = parcela.cultivo.imgCreciendo;
+                }
+                else {
+                    img.src = parcela.cultivo.imgMaduro;
                 }
 
             } else {
@@ -120,7 +148,6 @@ class Juego {
             }
 
             card.appendChild(img);
-
             card.style.cursor = "pointer";
 
             card.addEventListener("click", () => {
@@ -133,7 +160,6 @@ class Juego {
         });
 
     }
-
 
     interactuarParcela(index) {
 
@@ -156,7 +182,6 @@ class Juego {
         this.render();
 
     }
-
 
     guardar() {
 
