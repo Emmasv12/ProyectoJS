@@ -12,8 +12,8 @@ class Juego {
 
             new Semilla(
                 "Tomate",
-                3,              // tarda 3 ciclos en madurar
-                20,             // se vende por 20 de dinero
+                3, // tarda 3 ciclos en madurar
+                20, // se vende por 20 de dinero
                 "semilla.png",
                 "tomate_creciendo.png",
                 "tomate_maduro.png"
@@ -21,17 +21,17 @@ class Juego {
 
             new Semilla(
                 "Zanahoria",
-                2,              // tarda 2 ciclos en madurar
-                15,             // se vende por 15 de dinero
+                2, // tarda 2 ciclos en madurar
+                15, // se vende por 15 de dinero
                 "semilla.png",
                 "zanahoria_creciendo.png",
-                "zanahoria_madura.png"
+                "zanahoria_maduro.png"
             ),
 
             new Semilla(
                 "Maiz",
-                4,              // tarda 4 ciclos en madurar
-                30,             // se vende por 30 de dinero
+                4, // tarda 4 ciclos en madurar
+                30, // se vende por 30 de dinero
                 "semilla.png",
                 "maiz_creciendo.png",
                 "maiz_maduro.png"
