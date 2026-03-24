@@ -23,6 +23,11 @@ class Botones {
         // al pulsar guardar se serializa la partida en localStorage
         document.getElementById("btnGuardar").addEventListener("click", () => {
             this.juego.guardar();
+        }); 
+        // Al hacer click con el botón derecho del ratón en un cultivo se reiniciará
+        parcela.addEventListener("contextmenu", (event) => {
+            event.preventDefault();
+            parcela.textContent = " ";
         });
     }
 }

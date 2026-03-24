@@ -62,6 +62,14 @@ class Juego {
                 "semilla.png",
                 "maiz_creciendo.png",
                 "maiz_maduro.png"
+            ),
+            new Semilla (
+                "Caracol",
+                5,
+                40,
+                "semilla.png",
+                "caracol.png",
+                "caracol maduro.png"
             )
         ];
 
@@ -80,7 +88,7 @@ class Juego {
     /**
      * Devuelve los valores de dinero y energía según la dificultad elegida.
      * @param {string} dificultad
-     * @returns {{ dinero: number, energia: number }}
+     * @returns {{dinero: number,energia: number }}
      */
     static calcularStatsPorDificultad(dificultad) {
         switch (dificultad) {

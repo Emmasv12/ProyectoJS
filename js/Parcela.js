@@ -14,12 +14,16 @@ class Parcela {
 
     /**
      * Planta una semilla en la parcela creando un nuevo Cultivo.
-     * Solo actúa si la parcela está vacía.
+     * Solo actúa si la parcela está vacía. Hay una probabilidad de fallo.
      * @param {Semilla} semilla - La semilla que se va a plantar
      */
     plantar(semilla) {
         if (!this.cultivo) {
-            this.cultivo = new Cultivo(semilla);
+            let porcentaje = Math.random();
+            if(porcentaje>0.5){
+                console.log(porcentaje);
+                this.cultivo = new Cultivo(semilla);
+            }
         }
     }
 
