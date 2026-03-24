@@ -1,54 +1,77 @@
-// clase que representa una semilla ya plantada en una parcela
-// gestiona el progreso de crecimiento y la fase visual del cultivo
+// ============================================================
+// Cultivo.js
+// Clase que representa una semilla ya plantada en una parcela.
+// Gestiona el progreso de crecimiento y la fase visual del cultivo.
+// ============================================================
 class Cultivo {
 
-    // copia los datos de la semilla y establece el contador de tiempo
+    /**
+     * Copia los datos de la semilla y establece el contador de tiempo.
+     * @param {Semilla} semilla - La semilla que se ha plantado
+     */
     constructor(semilla) {
-        this.nombre = semilla.nombre;
-        this.tiempoTotal = semilla.tiempoMaduracion; // tiempo original para calcular el progreso
+        this.nombre        = semilla.nombre;
+        this.tiempoTotal   = semilla.tiempoMaduracion; // tiempo original para calcular el progreso
         this.tiempoRestante = semilla.tiempoMaduracion; // contador que va bajando cada ciclo
-        this.precioVenta = semilla.precioVenta;
+        this.precioVenta   = semilla.precioVenta;
 
-        // rutas de imagen para cada fase del cultivo
-        this.imgSemilla = semilla.imgSemilla;
-        this.imgCreciendo = semilla.imgCreciendo;
-        this.imgMaduro = semilla.imgMaduro;
+        // Rutas de imagen para cada fase visual del cultivo
+        this.imgSemilla    = semilla.imgSemilla;
+        this.imgCreciendo  = semilla.imgCreciendo;
+        this.imgMaduro     = semilla.imgMaduro;
     }
 
-    // descuenta un ciclo de tiempo si el cultivo todavia no ha madurado
+    /**
+     * Descuenta un ciclo de tiempo si el cultivo todavía no ha madurado.
+     */
     crecer() {
         if (this.tiempoRestante > 0) {
             this.tiempoRestante--;
         }
     }
 
-    // devuelve true cuando el tiempo restante llega a cero
+    /**
+     * Devuelve true cuando el tiempo restante llega a cero (cultivo listo).
+     * @returns {boolean}
+     */
     estaMaduro() {
         return this.tiempoRestante === 0;
     }
 
-    // determina en que fase visual se encuentra el cultivo segun el progreso
+    /**
+     * Determina en qué fase visual se encuentra el cultivo según el progreso.
+     * Fases posibles: "semilla" | "creciendo" | "maduro"
+     * @returns {string}
+     */
     obtenerFase() {
-
-        // proporcion de tiempo restante respecto al total (1.0 = recien plantado, 0.0 = maduro)
-        const progreso = this.tiempoRestante / this.tiempoTotal;
-
-        // recien plantado: muestra imagen de semilla
+        // Recién plantado: muestra imagen de semilla
         if (this.tiempoRestante === this.tiempoTotal) {
             return "semilla";
         }
 
-        // primera mitad del crecimiento: todavia parece semilla
+        // Proporción de tiempo restante respecto al total
+        const progreso = this.tiempoRestante / this.tiempoTotal;
+
+        // Primera mitad del crecimiento: todavía parece semilla
         if (progreso > 0.5) {
             return "semilla";
         }
 
-        // segunda mitad del crecimiento: ya se ve la planta creciendo
+        // Segunda mitad del crecimiento: ya se ve la planta creciendo
         if (progreso > 0) {
             return "creciendo";
         }
 
-        // tiempo agotado: el cultivo esta listo para cosechar
+        // Tiempo agotado: el cultivo está listo para cosechar
         return "maduro";
+    }
+
+    /**
+     * Devuelve el porcentaje de crecimiento completado (0-100).
+     * Útil para mostrar una barra de progreso en la interfaz.
+     * @returns {number}
+     */
+    obtenerPorcentaje() {
+        return Math.round(((this.tiempoTotal - this.tiempoRestante) / this.tiempoTotal) * 100);
     }
 }

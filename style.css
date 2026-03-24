@@ -1,34 +1,626 @@
+/* ============================================================
+   VARIABLES GLOBALES Y FUENTES
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+
+:root {
+    --color-tierra:    #5c3317;
+    --color-cesped:    #3a7d44;
+    --color-dorado:    #f5c518;
+    --color-naranja:   #e07b39;
+    --color-verde-osc: #2d5a1b;
+    --color-cielo:     #7ec8e3;
+    --color-crema:     #fdf3dc;
+    --color-gris-osc:  #2a2a2a;
+
+    --font-pixel:  'Press Start 2P', monospace;
+    --font-retro:  'VT323', monospace;
+
+    --sombra-pixel: 4px 4px 0px #000;
+    --borde-pixel:  3px solid #000;
+}
+
+/* ============================================================
+   RESET Y BASE
+   ============================================================ */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
 body {
-    font-family: 'ArcadeClassic', cursive;
+    font-family: var(--font-retro);
+    font-size: 1.1rem;
     image-rendering: pixelated;
     min-height: 100vh;
+    background-color: #1a1a1a;
+    overflow-x: hidden;
+}
+
+/* ============================================================
+   SISTEMA DE PANTALLAS
+   Cada pantalla ocupa el viewport completo.
+   Solo la clase .activa la hace visible.
+   ============================================================ */
+.pantalla {
+    display: none;
+    width: 100%;
+    min-height: 100vh;
+}
+
+.pantalla.activa {
+    display: block;
+}
+
+/* ============================================================
+   PANTALLA 1 — MENÚ DE INICIO
+   ============================================================ */
+
+/* Fondo con imagen de granja + capa oscura semitransparente */
+#pantalla-menu {
+    background-image: url("fondo.png");
+    background-size: cover;
+    background-position: center bottom;
+    background-repeat: no-repeat;
+    position: relative;
+}
+
+/* Capa de overlay para oscurecer el fondo y mejorar legibilidad */
+.menu-overlay {
+    width: 100%;
+    min-height: 100vh;
+    background: linear-gradient(
+        180deg,
+        rgba(10, 20, 5, 0.55) 0%,
+        rgba(30, 60, 10, 0.70) 60%,
+        rgba(10, 20, 5, 0.85) 100%
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+/* Caja central del menú */
+.menu-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+    max-width: 480px;
+    width: 100%;
+}
+
+/* Bloque del título */
+.menu-titulo {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.titulo-linea1 {
+    font-family: var(--font-pixel);
+    font-size: clamp(1.2rem, 4vw, 2rem);
+    color: var(--color-dorado);
+    text-shadow:
+        3px 3px 0 #000,
+        0 0 20px rgba(245, 197, 24, 0.6);
+    letter-spacing: 4px;
+    animation: tituloPulso 3s ease-in-out infinite;
+}
+
+.titulo-linea2 {
+    font-family: var(--font-pixel);
+    font-size: clamp(2rem, 7vw, 3.5rem);
+    color: #fff;
+    text-shadow:
+        4px 4px 0 var(--color-verde-osc),
+        0 0 30px rgba(255,255,255,0.3);
+    letter-spacing: 8px;
+}
+
+.titulo-decoracion {
+    font-family: var(--font-retro);
+    font-size: 1.4rem;
+    color: rgba(245, 197, 24, 0.5);
+    letter-spacing: 6px;
+    margin-top: 4px;
+}
+
+/* Animación de pulso suave del título */
+@keyframes tituloPulso {
+    0%, 100% { text-shadow: 3px 3px 0 #000, 0 0 20px rgba(245,197,24,0.6); }
+    50%       { text-shadow: 3px 3px 0 #000, 0 0 40px rgba(245,197,24,0.9); }
+}
+
+/* Columna de botones del menú */
+.menu-botones {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+    align-items: center;
+}
+
+/* Pie del menú (texto parpadeante) */
+.menu-footer {
+    font-family: var(--font-retro);
+    font-size: 1.1rem;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 3px;
+    animation: parpadeo 1.5s step-end infinite;
+}
+
+@keyframes parpadeo {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
+}
+
+/* ============================================================
+   BOTONES PIXEL ART (reutilizables en todo el juego)
+   ============================================================ */
+.btn-pixel {
+    font-family: var(--font-pixel);
+    font-size: clamp(0.55rem, 1.5vw, 0.75rem);
+    padding: 14px 24px;
+    border: var(--borde-pixel);
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    width: 100%;
+    max-width: 320px;
+    text-align: center;
+    letter-spacing: 1px;
+    transition: transform 0.08s, box-shadow 0.08s;
+    box-shadow: var(--sombra-pixel);
+    text-transform: uppercase;
+    line-height: 1.5;
+}
+
+/* Efecto de "presionar" al hacer clic */
+.btn-pixel:active {
+    transform: translate(3px, 3px);
+    box-shadow: 1px 1px 0px #000;
+}
+
+/* Hover: ligero desplazamiento hacia arriba */
+.btn-pixel:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px #000;
+}
+
+/* Variantes de color */
+.btn-pixel-verde {
+    background-color: var(--color-cesped);
+    color: #fff;
+}
+.btn-pixel-verde:hover { background-color: #4d9e5a; color: #fff; }
+
+.btn-pixel-azul {
+    background-color: #2a6bbd;
+    color: #fff;
+}
+.btn-pixel-azul:hover { background-color: #3580d8; color: #fff; }
+
+.btn-pixel-rojo {
+    background-color: #b52a2a;
+    color: #fff;
+}
+.btn-pixel-rojo:hover { background-color: #d43535; color: #fff; }
+
+.btn-pixel-gris {
+    background-color: #4a4a4a;
+    color: #ccc;
+}
+.btn-pixel-gris:hover { background-color: #606060; color: #fff; }
+
+/* ============================================================
+   PANTALLA 2 — CONFIGURACIÓN DE PARTIDA
+   ============================================================ */
+#pantalla-config {
+    background-image: url("fondo.png");
+    background-size: cover;
+    background-position: center bottom;
+    background-repeat: no-repeat;
+}
+
+.config-overlay {
+    width: 100%;
+    min-height: 100vh;
+    background: linear-gradient(
+        180deg,
+        rgba(5, 15, 5, 0.80) 0%,
+        rgba(20, 50, 10, 0.88) 100%
+    );
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+/* Caja de configuración */
+.config-container {
+    background: rgba(20, 35, 15, 0.92);
+    border: var(--borde-pixel);
+    box-shadow: var(--sombra-pixel);
+    padding: 32px;
+    width: 100%;
+    max-width: 680px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.config-titulo {
+    font-family: var(--font-pixel);
+    font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+    color: var(--color-dorado);
+    text-shadow: 2px 2px 0 #000;
+    text-align: center;
+    letter-spacing: 2px;
+}
+
+.config-subtitulo {
+    font-family: var(--font-retro);
+    font-size: 1.3rem;
+    color: rgba(255,255,255,0.6);
+    text-align: center;
+    letter-spacing: 2px;
+}
+
+/* Grid de campos de configuración (2 columnas en escritorio) */
+.config-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 600px) {
+    .config-grid { grid-template-columns: 1fr; }
+}
+
+/* Cada campo individual */
+.config-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.config-label {
+    font-family: var(--font-pixel);
+    font-size: 0.55rem;
+    color: var(--color-dorado);
+    letter-spacing: 1px;
+}
+
+/* Inputs de texto */
+.config-input {
+    background: rgba(0,0,0,0.5);
+    border: 2px solid #555;
+    color: #fff;
+    font-family: var(--font-retro);
+    font-size: 1.3rem;
+    padding: 8px 12px;
+    outline: none;
+    transition: border-color 0.2s;
+    letter-spacing: 1px;
+}
+
+.config-input:focus {
+    border-color: var(--color-dorado);
+    box-shadow: 0 0 8px rgba(245,197,24,0.3);
+}
+
+.config-input::placeholder { color: rgba(255,255,255,0.3); }
+
+/* Grupos de botones de opción (selector visual) */
+.config-opciones {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.opcion-btn {
+    font-family: var(--font-retro);
+    font-size: 1.1rem;
+    padding: 6px 12px;
+    background: rgba(0,0,0,0.5);
+    border: 2px solid #555;
+    color: #aaa;
+    cursor: pointer;
+    transition: all 0.15s;
+    flex: 1;
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+.opcion-btn:hover {
+    border-color: var(--color-dorado);
+    color: #fff;
+}
+
+/* Estado activo (seleccionado) */
+.opcion-btn.opcion-activa {
+    background: var(--color-cesped);
+    border-color: var(--color-dorado);
+    color: #fff;
+    box-shadow: 0 0 8px rgba(58,125,68,0.5);
+}
+
+/* Slider de nivel de herramientas */
+.config-slider-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.config-slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 8px;
+    background: #333;
+    border: 2px solid #555;
+    outline: none;
+    cursor: pointer;
+}
+
+.config-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--color-dorado);
+    border: 2px solid #000;
+    cursor: pointer;
+}
+
+.config-slider-valor {
+    font-family: var(--font-retro);
+    font-size: 1.2rem;
+    color: var(--color-dorado);
+    letter-spacing: 1px;
+}
+
+/* Mensajes de error de validación */
+.config-error {
+    font-family: var(--font-retro);
+    font-size: 1rem;
+    color: #ff5555;
+    min-height: 18px;
+    letter-spacing: 1px;
+}
+
+/* Resumen dinámico de parámetros según dificultad */
+.config-resumen {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 12px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(245,197,24,0.2);
+}
+
+.config-resumen span {
+    font-family: var(--font-retro);
+    font-size: 1.3rem;
+    color: var(--color-dorado);
+    letter-spacing: 1px;
+}
+
+/* Botonera de acciones (Volver / Comenzar) */
+.config-acciones {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.config-acciones .btn-pixel {
+    max-width: 200px;
+}
+
+/* ============================================================
+   PANTALLA 3 — JUEGO
+   ============================================================ */
+#pantalla-juego {
     background-image: url("fondo.png");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+    background-attachment: fixed;
 }
 
+/* Título del juego en la pantalla de juego */
+.juego-titulo {
+    font-family: var(--font-pixel);
+    font-size: clamp(0.7rem, 2vw, 1rem);
+    color: var(--color-dorado);
+    text-shadow: 3px 3px 0 #000;
+    letter-spacing: 3px;
+}
+
+/* Cards de info (granjero, inventario, herramientas) */
 .card {
-    background-color: rgba(255, 255, 255, 0.448);
+    background-color: rgba(20, 35, 15, 0.85);
+    border: var(--borde-pixel) !important;
+    box-shadow: var(--sombra-pixel);
+    color: #fff;
+    font-family: var(--font-retro);
+    font-size: 1.2rem;
+    letter-spacing: 1px;
 }
 
+.card h5 {
+    font-family: var(--font-pixel);
+    font-size: 0.65rem;
+    color: var(--color-dorado);
+    margin-bottom: 10px;
+    letter-spacing: 2px;
+}
+
+.card p {
+    margin-bottom: 4px;
+    color: #ddd;
+}
+
+/* ============================================================
+   PARCELAS DEL TERRENO
+   ============================================================ */
+
+/* Parcela vacía */
 .parcela-vacia {
-    background-color: #8B4513;
+    background-color: rgba(92, 51, 23, 0.8);
     color: white;
 }
 
+/* Parcela con cultivo creciendo */
 .parcela-creciendo {
-    background-color: #f0ad4e;
+    background-color: rgba(240, 173, 78, 0.7);
     color: black;
 }
 
+/* Parcela con cultivo maduro */
 .parcela-madura {
-    background-color: #5cb85c;
+    background-color: rgba(92, 184, 92, 0.7);
     color: white;
 }
 
-img {
-    height: 150px;
-    width: 50px;
+/* Cards de parcela */
+.parcela-card {
+    background: rgba(20, 35, 15, 0.85);
+    border: var(--borde-pixel) !important;
+    box-shadow: var(--sombra-pixel);
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+    padding: 8px;
+    text-align: center;
+}
+
+.parcela-card:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px #000;
+}
+
+.parcela-card:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px #000;
+}
+
+/* Imágenes de cultivo en parcelas */
+.parcela-img {
+    width: 100%;
+    height: 120px;
     object-fit: contain;
+    image-rendering: pixelated;
+}
+
+/* Etiqueta de nombre del cultivo en la parcela */
+.parcela-nombre {
+    font-family: var(--font-retro);
+    font-size: 1rem;
+    color: var(--color-dorado);
+    margin-top: 4px;
+    letter-spacing: 1px;
+}
+
+/* Barra de progreso de crecimiento */
+.parcela-progreso {
+    width: 100%;
+    height: 6px;
+    background: #333;
+    border: 1px solid #555;
+    margin-top: 4px;
+    overflow: hidden;
+}
+
+.parcela-progreso-bar {
+    height: 100%;
+    background: var(--color-cesped);
+    transition: width 0.5s;
+}
+
+/* ============================================================
+   HERRAMIENTAS EN EL HUD
+   ============================================================ */
+.herramientas-lista {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.herramienta-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.herramienta-img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    image-rendering: pixelated;
+    border: 2px solid #555;
+    background: rgba(0,0,0,0.3);
+    padding: 4px;
+}
+
+.herramienta-nombre {
+    font-family: var(--font-retro);
+    font-size: 0.9rem;
+    color: #aaa;
+    letter-spacing: 1px;
+}
+
+.herramienta-nivel {
+    font-family: var(--font-retro);
+    font-size: 0.85rem;
+    color: var(--color-dorado);
+}
+
+/* ============================================================
+   INVENTARIO — LISTA DE SEMILLAS
+   ============================================================ */
+.inventario-lista {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.semilla-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid #555;
+    padding: 6px 10px;
+    min-width: 80px;
+}
+
+.semilla-item-nombre {
+    font-family: var(--font-retro);
+    font-size: 1rem;
+    color: #ddd;
+    letter-spacing: 1px;
+}
+
+.semilla-item-cantidad {
+    font-family: var(--font-pixel);
+    font-size: 0.55rem;
+    color: var(--color-dorado);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 576px) {
+    .menu-container { gap: 20px; }
+    .config-container { padding: 20px 16px; }
+    .btn-pixel { font-size: 0.5rem; padding: 12px 16px; }
 }
