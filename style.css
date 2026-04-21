@@ -211,6 +211,12 @@ body {
 }
 .btn-pixel-rojo:hover { background-color: #d43535; color: #fff; }
 
+.btn-pixel-naranja {
+    background-color: var(--color-naranja);
+    color: #fff;
+}
+.btn-pixel-naranja:hover { background-color: #f09050; color: #fff; }
+
 .btn-pixel-gris {
     background-color: #4a4a4a;
     color: #ccc;

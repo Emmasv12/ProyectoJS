@@ -24,33 +24,28 @@
         <div class="menu-overlay">
             <div class="menu-container">
 
-                <!-- Título del juego con efecto pixel -->
                 <div class="menu-titulo">
                     <span class="titulo-linea1">TU GRANJA</span>
                     <span class="titulo-linea2">FELIZ</span>
                     <div class="titulo-decoracion">· · · · · · · · · ·</div>
                 </div>
 
-                <!-- Botones del menú principal -->
                 <div class="menu-botones">
                     <button id="btnNuevaPartida" class="btn-pixel btn-pixel-verde">
                         Nueva Partida
                     </button>
-
                     <button id="btnContinuar" class="btn-pixel btn-pixel-azul">
                         Continuar Partida
                     </button>
-
                     <button id="btnEliminar" class="btn-pixel btn-pixel-rojo">
                         Eliminar Partida
                     </button>
-
-                    <a id="btnGitHub" href="https://github.com/Emmasv12/ProyectoJS" target="_blank" class="btn-pixel btn-pixel-gris">
+                    <a id="btnGitHub" href="https://github.com/Emmasv12/ProyectoJS" target="_blank"
+                       class="btn-pixel btn-pixel-gris">
                         Repositorio GitHub
                     </a>
                 </div>
 
-                <!-- Pie decorativo -->
                 <div class="menu-footer">
                     <span>· PULSA PARA EMPEZAR ·</span>
                 </div>
@@ -65,37 +60,29 @@
 
                 <h2 class="config-titulo">Nueva Partida</h2>
                 <p class="config-subtitulo">Configura tu granja antes de empezar</p>
-                <p style="color: aliceblue;" class="instrucciones">Para jugar a este juego debes darle al boton de recargar semillas para poder tener semillas que plantar, seguidamente debes hacer click en una de las macetas vacias para empezar a jugar. Una vez que ya haya cargado tu planta, podras recogerla haciendo click en ella, ¡cuando la recoges te da dinero!</p>
+                <p style="color: aliceblue;" class="instrucciones">
+                    Para jugar a este juego debes darle al botón de recargar semillas para poder
+                    tener semillas que plantar, seguidamente debes hacer click en una de las macetas
+                    vacías para empezar a jugar. Una vez que ya haya cargado tu planta, podrás
+                    recogerla haciendo click en ella, ¡cuando la recoges te da dinero!
+                </p>
 
                 <div class="config-grid">
 
-                    <!-- Campo: Nombre del granjero -->
                     <div class="config-campo">
                         <label class="config-label">Nombre del Granjero</label>
-                        <input
-                            type="text"
-                            id="cfgNombre"
-                            class="config-input"
-                            placeholder="Ej: Emma"
-                            maxlength="20"
-                        />
+                        <input type="text" id="cfgNombre" class="config-input"
+                               placeholder="Ej: Emma" maxlength="20"/>
                         <span class="config-error" id="errNombre"></span>
                     </div>
 
-                    <!-- Campo: Nombre de la granja -->
                     <div class="config-campo">
                         <label class="config-label">Nombre de la Granja</label>
-                        <input
-                            type="text"
-                            id="cfgGranja"
-                            class="config-input"
-                            placeholder="Ej: Granja de pepito"
-                            maxlength="30"
-                        />
+                        <input type="text" id="cfgGranja" class="config-input"
+                               placeholder="Ej: Granja de pepito" maxlength="30"/>
                         <span class="config-error" id="errGranja"></span>
                     </div>
 
-                    <!-- Campo: Dificultad -->
                     <div class="config-campo">
                         <label class="config-label">Dificultad</label>
                         <div class="config-opciones" id="cfgDificultad">
@@ -106,7 +93,6 @@
                         <span class="config-error" id="errDificultad"></span>
                     </div>
 
-                    <!-- Campo: Tamaño del terreno -->
                     <div class="config-campo">
                         <label class="config-label">Tamaño del Terreno</label>
                         <div class="config-opciones" id="cfgTerreno">
@@ -117,7 +103,6 @@
                         <span class="config-error" id="errTerreno"></span>
                     </div>
 
-                    <!-- Campo: Cultivo característico del pueblo -->
                     <div class="config-campo">
                         <label class="config-label">Cultivo Favorito</label>
                         <div class="config-opciones" id="cfgCultivo">
@@ -128,32 +113,25 @@
                         <span class="config-error" id="errCultivo"></span>
                     </div>
 
-                    <!-- Campo: Nivel de herramientas -->
                     <div class="config-campo">
                         <label class="config-label">Nivel inicial de Herramientas</label>
                         <div class="config-slider-wrap">
-                            <input
-                                type="range"
-                                id="cfgHerramientas"
-                                class="config-slider"
-                                min="1"
-                                max="3"
-                                value="1"
-                            />
-                            <span class="config-slider-valor" id="valorHerramientas">Nivel 1 — Básico</span>
+                            <input type="range" id="cfgHerramientas" class="config-slider"
+                                   min="1" max="3" value="1"/>
+                            <span class="config-slider-valor" id="valorHerramientas">
+                                Nivel 1 — Básico
+                            </span>
                         </div>
                         <span class="config-error" id="errHerramientas"></span>
                     </div>
 
                 </div>
 
-                <!-- Info dinámica según dificultad -->
                 <div class="config-resumen" id="cfgResumen">
                     <span id="resumenDinero">Dinero inicial: 100</span>
                     <span id="resumenEnergia">Energía inicial: 100</span>
                 </div>
 
-                <!-- Botones de acción -->
                 <div class="config-acciones">
                     <button id="btnVolver" class="btn-pixel btn-pixel-gris">Volver</button>
                     <button id="btnIniciar" class="btn-pixel btn-pixel-verde">Comenzar</button>
@@ -165,29 +143,25 @@
 
     <!-- ===================== PANTALLA: JUEGO ===================== -->
     <div id="pantalla-juego" class="pantalla">
-
         <div class="container py-4">
 
             <h1 class="juego-titulo text-center mb-4">Juego de Granja</h1>
 
-            <!-- Info del granjero -->
             <div id="info-granjero" class="card p-3 mb-3 shadow-sm"></div>
+            <div id="inventario"    class="card p-3 mb-3 shadow-sm"></div>
+            <div id="herramientas"  class="card p-3 mb-3 shadow-sm"></div>
 
-            <!-- Inventario -->
-            <div id="inventario" class="card p-3 mb-3 shadow-sm"></div>
-
-            <!-- Herramientas -->
-            <div id="herramientas" class="card p-3 mb-3 shadow-sm"></div>
-
-            <!-- Terreno de parcelas -->
             <div id="terreno" class="row g-3 justify-content-center"></div>
 
-            <!-- Botones de acción del juego -->
             <div class="text-center mt-4">
-                <button id="btnRecargar" class="btn-pixel btn-pixel-verde me-2">
+                <button id="btnRecargar"      class="btn-pixel btn-pixel-verde me-2">
                     Recargar Semillas
                 </button>
-                <button id="btnGuardar" class="btn-pixel btn-pixel-azul me-2">
+                <!-- NUEVO: botón para abrir la tienda -->
+                <button id="btnTienda"        class="btn-pixel btn-pixel-naranja me-2">
+                    Tienda
+                </button>
+                <button id="btnGuardar"       class="btn-pixel btn-pixel-azul me-2">
                     Guardar Partida
                 </button>
                 <button id="btnMenuPrincipal" class="btn-pixel btn-pixel-gris">
@@ -196,20 +170,36 @@
             </div>
 
         </div>
-
     </div>
+
+    <!-- ===================== PANTALLA: TIENDA ===================== -->
+    <!--
+        NUEVA PANTALLA — FASE 2
+        El contenido lo genera Tienda.js dinámicamente al instanciarse.
+        Solo necesita este div vacío con el id correcto.
+    -->
+    <div id="pantalla-tienda" class="pantalla"></div>
 
     <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <!-- Clases del juego (orden de dependencias) -->
+    <!--
+        ORDEN DE CARGA DE SCRIPTS (importante: respetar dependencias):
+        1. Clases modelo (sin dependencias entre ellas)
+        2. DatosXML  ← NUEVO: debe ir antes de Juego y Menu
+        3. Clases que usan las anteriores
+        4. Tienda    ← NUEVO: antes de Main
+        5. Main      ← siempre el último (punto de entrada)
+    -->
     <script src="js/Semilla.js"></script>
     <script src="js/Cultivo.js"></script>
     <script src="js/Herramienta.js"></script>
     <script src="js/Granjero.js"></script>
     <script src="js/Parcela.js"></script>
     <script src="js/Terreno.js"></script>
+    <script src="js/DatosXML.js"></script>  <!-- NUEVO -->
     <script src="js/Juego.js"></script>
+    <script src="js/Tienda.js"></script>    <!-- NUEVO -->
     <script src="js/Menu.js"></script>
     <script src="js/Main.js"></script>
 

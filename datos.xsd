@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <xs:element name="juego">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="semillas"     type="TipoSemillas"/>
+                <xs:element name="herramientas" type="TipoHerramientas"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:complexType name="TipoSemillas">
+        <xs:sequence>
+            <!-- Debe haber al menos 1 semilla, sin límite máximo -->
+            <xs:element name="semilla" type="TipoSemilla" minOccurs="1" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="TipoSemilla">
+        <xs:sequence>
+            <xs:element name="nombre"           type="xs:string"/>
+            <!-- tiempoMaduracion: mínimo 1 ciclo -->
+            <xs:element name="tiempoMaduracion" type="TipoEnteroPositivo"/>
+            <!-- precioCompra y precioVenta: valores positivos -->
+            <xs:element name="precioCompra"     type="TipoEnteroPositivo"/>
+            <xs:element name="precioVenta"      type="TipoEnteroPositivo"/>
+            <!-- tipo: categoría para los filtros XPath de la tienda -->
+            <xs:element name="tipo"             type="TipoCategoriaSemilla"/>
+            <xs:element name="imagenes"         type="TipoImagenesSemilla"/>
+        </xs:sequence>
+        <!-- Atributo id obligatorio y único (se verifica en la app con JS) -->
+        <xs:attribute name="id" type="xs:string" use="required"/>
+    </xs:complexType>
+
+    <xs:simpleType name="TipoCategoriaSemilla">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="hortaliza"/>
+            <xs:enumeration value="fruta"/>
+            <xs:enumeration value="cereal"/>
+            <xs:enumeration value="especial"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="TipoImagenesSemilla">
+        <xs:sequence>
+            <xs:element name="semilla"   type="xs:string"/>
+            <xs:element name="creciendo" type="xs:string"/>
+            <xs:element name="maduro"    type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="TipoHerramientas">
+        <xs:sequence>
+            <xs:element name="herramienta" type="TipoHerramienta" minOccurs="3" maxOccurs="3"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="TipoHerramienta">
+        <xs:sequence>
+            <xs:element name="nombre"      type="xs:string"/>
+            <xs:element name="imagen"      type="xs:string"/>
+            <xs:element name="descripcion" type="xs:string"/>
+            <xs:element name="niveles"     type="TipoNiveles"/>
+        </xs:sequence>
+        <xs:attribute name="id" type="xs:string" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="TipoNiveles">
+        <xs:sequence>
+            <xs:element name="nivel" type="TipoNivel" minOccurs="3" maxOccurs="3"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="TipoNivel">
+        <xs:sequence>
+            <xs:element name="nombre"      type="xs:string"/>
+            <xs:any processContents="skip" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="costeMejora" type="xs:nonNegativeInteger"/>
+        </xs:sequence>
+        <!-- numero: 1, 2 o 3 -->
+        <xs:attribute name="numero" type="TipoNumeroNivel" use="required"/>
+    </xs:complexType>
+
+    <xs:simpleType name="TipoNumeroNivel">
+        <xs:restriction base="xs:integer">
+            <xs:minInclusive value="1"/>
+            <xs:maxInclusive value="3"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="TipoEnteroPositivo">
+        <xs:restriction base="xs:integer">
+            <xs:minInclusive value="1"/>
+        </xs:restriction>
+    </xs:simpleType>
+</xs:schema>

@@ -2,18 +2,29 @@
 // Menu.js
 // Clase que gestiona la navegación entre pantallas y la
 // pantalla de configuración de nueva partida.
-// Se inicializa desde Main.js antes de arrancar el juego.
+//
+// CAMBIO FASE 2 — INTEGRACIÓN XML:
+//   · Recibe una instancia de DatosXML en el constructor
+//   · Al iniciar una nueva partida o cargar una existente,
+//     obtiene el catálogo de semillas del XML y se lo pasa a Juego
+//   · Al abrir la tienda, usa DatosXML para filtrar semillas con XPath
 // ============================================================
 class Menu {
 
-    constructor() {
-        this.juegoActual = null; // referencia a la instancia activa del Juego
+    /**
+     * @param {DatosXML} datosXML - Instancia con el XML ya cargado (de Main.js)
+     */
+    constructor(datosXML) {
+        this.juegoActual = null;
+
+        // Guarda la referencia al gestor de XML para usarla en toda la clase
+        this.datosXML = datosXML;
 
         // Estado interno de la pantalla de configuración
         this.config = {
-            dificultad:  "normal",
-            terreno:     8,
-            cultivo:     "Zanahoria",
+            dificultad:   "normal",
+            terreno:      8,
+            cultivo:      "Zanahoria",
             herramientas: 1
         };
 
@@ -25,22 +36,16 @@ class Menu {
     // EVENTOS DEL MENÚ PRINCIPAL
     // ============================================================
 
-    /**
-     * Registra los eventos de los botones del menú de inicio.
-     */
     iniciarEventosMenu() {
 
-        // --- Nueva Partida: muestra la pantalla de configuración ---
         document.getElementById("btnNuevaPartida").addEventListener("click", () => {
             Menu.mostrarPantalla("pantalla-config");
         });
 
-        // --- Continuar Partida: carga desde localStorage si existe ---
         document.getElementById("btnContinuar").addEventListener("click", () => {
             const existe = localStorage.getItem("partidaGranja");
 
             if (!existe) {
-                // No hay partida guardada
                 Swal.fire({
                     title: "Sin partida guardada",
                     text: "No se encontró ninguna partida. Comienza una nueva.",
@@ -52,12 +57,14 @@ class Menu {
                 return;
             }
 
-            // Carga la partida y muestra la pantalla de juego
             Menu.mostrarPantalla("pantalla-juego");
-            this.juegoActual = Juego.cargar();
+
+            // CAMBIO FASE 2: pasa el catálogo del XML al método cargar()
+            // para que el juego restaurado tenga las semillas disponibles
+            const semillasXML     = this.datosXML.obtenerTodasLasSemillas();
+            this.juegoActual      = Juego.cargar(semillasXML);
         });
 
-        // --- Eliminar Partida: borra el guardado de localStorage ---
         document.getElementById("btnEliminar").addEventListener("click", () => {
             const existe = localStorage.getItem("partidaGranja");
 
@@ -73,7 +80,6 @@ class Menu {
                 return;
             }
 
-            // Pide confirmación antes de eliminar
             Swal.fire({
                 title: "¿Eliminar partida?",
                 text: "Esta acción no se puede deshacer.",
@@ -103,13 +109,8 @@ class Menu {
     // EVENTOS DE LA PANTALLA DE CONFIGURACIÓN
     // ============================================================
 
-    /**
-     * Registra todos los eventos interactivos de la pantalla de config:
-     * grupos de botones, slider, inputs de texto y botones de acción.
-     */
     iniciarEventosConfig() {
 
-        // ---- Grupos de botones de opción (dificultad, terreno, cultivo) ----
         this.registrarGrupoOpciones("cfgDificultad", valor => {
             this.config.dificultad = valor;
             this.actualizarResumen();
@@ -123,43 +124,30 @@ class Menu {
             this.config.cultivo = valor;
         });
 
-        // ---- Slider de nivel de herramientas ----
-        const slider = document.getElementById("cfgHerramientas");
+        const slider     = document.getElementById("cfgHerramientas");
         const valorLabel = document.getElementById("valorHerramientas");
 
         slider.addEventListener("input", () => {
-            const nivel = parseInt(slider.value);
+            const nivel            = parseInt(slider.value);
             this.config.herramientas = nivel;
-
-            // Etiquetas descriptivas según nivel
-            const etiquetas = { 1: "Básico", 2: "Mejorado", 3: "Maestro" };
+            const etiquetas        = { 1: "Básico", 2: "Mejorado", 3: "Maestro" };
             valorLabel.textContent = `Nivel ${nivel} — ${etiquetas[nivel]}`;
         });
 
-        // ---- Botón Volver: regresa al menú principal ----
         document.getElementById("btnVolver").addEventListener("click", () => {
             this.limpiarErrores();
             Menu.mostrarPantalla("pantalla-menu");
         });
 
-        // ---- Botón Iniciar: valida y arranca la partida ----
         document.getElementById("btnIniciar").addEventListener("click", () => {
             if (this.validarConfig()) {
                 this.iniciarNuevaPartida();
             }
         });
 
-        // Actualiza el resumen al cargar la pantalla
         this.actualizarResumen();
     }
 
-    /**
-     * Registra el comportamiento de selección exclusiva para un grupo
-     * de botones de opción (.opcion-btn dentro de un contenedor).
-     *
-     * @param {string}   contenedorId - ID del div que contiene los botones
-     * @param {Function} callback     - Función llamada con el valor seleccionado
-     */
     registrarGrupoOpciones(contenedorId, callback) {
         const contenedor = document.getElementById(contenedorId);
         if (!contenedor) return;
@@ -168,19 +156,13 @@ class Menu {
 
         botones.forEach(btn => {
             btn.addEventListener("click", () => {
-                // Quita la clase activa de todos los botones del grupo
                 botones.forEach(b => b.classList.remove("opcion-activa"));
-                // Activa solo el pulsado
                 btn.classList.add("opcion-activa");
-                // Llama al callback con el valor data-valor del botón
                 callback(btn.dataset.valor);
             });
         });
     }
 
-    /**
-     * Actualiza el resumen de dinero y energía según la dificultad seleccionada.
-     */
     actualizarResumen() {
         const stats = Juego.calcularStatsPorDificultad(this.config.dificultad);
         document.getElementById("resumenDinero").textContent  = `💰 Dinero inicial: ${stats.dinero}`;
@@ -191,16 +173,10 @@ class Menu {
     // VALIDACIÓN
     // ============================================================
 
-    /**
-     * Valida todos los campos del formulario de configuración.
-     * Muestra mensajes de error inline si hay problemas.
-     * @returns {boolean} true si todo es válido, false si hay errores
-     */
     validarConfig() {
         this.limpiarErrores();
         let valido = true;
 
-        // --- Nombre del granjero ---
         const nombre = document.getElementById("cfgNombre").value.trim();
         if (!nombre) {
             this.mostrarError("errNombre", "El nombre no puede estar vacío.");
@@ -210,20 +186,17 @@ class Menu {
             valido = false;
         }
 
-        // --- Nombre de la granja ---
         const granja = document.getElementById("cfgGranja").value.trim();
         if (!granja) {
             this.mostrarError("errGranja", "El nombre de la granja es obligatorio.");
             valido = false;
         }
 
-        // --- Dificultad (debe haberse seleccionado) ---
         if (!this.config.dificultad) {
             this.mostrarError("errDificultad", "Selecciona una dificultad.");
             valido = false;
         }
 
-        // --- Coherencia: en difícil el terreno no puede ser de 12 parcelas ---
         if (this.config.dificultad === "dificil" && this.config.terreno === 12) {
             this.mostrarError("errTerreno", "En difícil el terreno máximo es de 8 parcelas.");
             valido = false;
@@ -232,25 +205,17 @@ class Menu {
         return valido;
     }
 
-    /**
-     * Muestra un mensaje de error bajo un campo específico.
-     * @param {string} idError - ID del elemento <span> de error
-     * @param {string} mensaje - Texto del error
-     */
     mostrarError(idError, mensaje) {
         const el = document.getElementById(idError);
         if (el) el.textContent = mensaje;
     }
 
-    /**
-     * Limpia todos los mensajes de error del formulario.
-     */
     limpiarErrores() {
-        const errores = ["errNombre", "errGranja", "errDificultad", "errTerreno", "errCultivo", "errHerramientas"];
-        errores.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.textContent = "";
-        });
+        ["errNombre","errGranja","errDificultad","errTerreno","errCultivo","errHerramientas"]
+            .forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = "";
+            });
     }
 
     // ============================================================
@@ -259,36 +224,36 @@ class Menu {
 
     /**
      * Recoge los valores del formulario y arranca una nueva instancia de Juego.
+     *
+     * CAMBIO FASE 2: obtiene el catálogo de semillas del XML y se lo pasa
+     * al constructor de Juego como semillasIniciales.
      */
     iniciarNuevaPartida() {
+        // Obtiene todas las semillas del catálogo XML
+        const semillasXML = this.datosXML.obtenerTodasLasSemillas();
+
         const configPartida = {
-            nombre:        document.getElementById("cfgNombre").value.trim(),
-            granja:        document.getElementById("cfgGranja").value.trim(),
-            dificultad:    this.config.dificultad,
-            tamanoTerreno: this.config.terreno,
-            cultivoFav:    this.config.cultivo,
-            nivelHerram:   this.config.herramientas
+            nombre:            document.getElementById("cfgNombre").value.trim(),
+            granja:            document.getElementById("cfgGranja").value.trim(),
+            dificultad:        this.config.dificultad,
+            tamanoTerreno:     this.config.terreno,
+            cultivoFav:        this.config.cultivo,
+            nivelHerram:       this.config.herramientas,
+            semillasIniciales: semillasXML   // ← catálogo del XML, no hardcodeado
         };
 
-        // Muestra la pantalla de juego y arranca la instancia
         Menu.mostrarPantalla("pantalla-juego");
         this.juegoActual = new Juego(configPartida);
     }
 
     // ============================================================
-    // NAVEGACIÓN ENTRE PANTALLAS (método estático reutilizable)
+    // NAVEGACIÓN ENTRE PANTALLAS
     // ============================================================
 
-    /**
-     * Oculta todas las pantallas y muestra únicamente la indicada.
-     * @param {string} idPantalla - ID del elemento div de la pantalla a mostrar
-     */
     static mostrarPantalla(idPantalla) {
-        // Quita la clase "activa" de todas las pantallas
         document.querySelectorAll(".pantalla").forEach(p => {
             p.classList.remove("activa");
         });
-        // Añade "activa" solo a la pantalla destino
         const destino = document.getElementById(idPantalla);
         if (destino) destino.classList.add("activa");
     }

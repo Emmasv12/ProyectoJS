@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<juego xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="datos.xsd">
+
+    <!-- Cada <semilla> define un tipo de cultivo que puede comprarseen la tienda y plantarse en el terreno.-->
+    <semillas>
+
+        <semilla id="tomate">
+            <nombre>Tomate</nombre>
+            <!-- Ciclos que tarda en pasar de semilla a maduro -->
+            <tiempoMaduracion>3</tiempoMaduracion>
+            <!-- Precio de compra en la tienda -->
+            <precioCompra>5</precioCompra>
+            <!-- Dinero que se obtiene al vender el cultivo cosechado -->
+            <precioVenta>20</precioVenta>
+            <!-- Tipo para filtrar por categoría en la tienda -->
+            <tipo>hortaliza</tipo>
+            <!-- Rutas de imagen para cada fase visual del cultivo -->
+            <imagenes>
+                <semilla>semilla.png</semilla>
+                <creciendo>tomate_creciendo.png</creciendo>
+                <maduro>tomate_maduro.png</maduro>
+            </imagenes>
+        </semilla>
+
+        <semilla id="zanahoria">
+            <nombre>Zanahoria</nombre>
+            <tiempoMaduracion>2</tiempoMaduracion>
+            <precioCompra>4</precioCompra>
+            <precioVenta>15</precioVenta>
+            <tipo>hortaliza</tipo>
+            <imagenes>
+                <semilla>semilla.png</semilla>
+                <creciendo>zanahoria_creciendo.png</creciendo>
+                <maduro>zanahoria_maduro.png</maduro>
+            </imagenes>
+        </semilla>
+
+        <semilla id="maiz">
+            <nombre>Maiz</nombre>
+            <tiempoMaduracion>4</tiempoMaduracion>
+            <precioCompra>6</precioCompra>
+            <precioVenta>30</precioVenta>
+            <tipo>cereal</tipo>
+            <imagenes>
+                <semilla>semilla.png</semilla>
+                <creciendo>maiz_creciendo.png</creciendo>
+                <maduro>maiz_maduro.png</maduro>
+            </imagenes>
+        </semilla>
+
+        <semilla id="caracol">
+            <nombre>Caracol</nombre>
+            <tiempoMaduracion>5</tiempoMaduracion>
+            <precioCompra>8</precioCompra>
+            <precioVenta>40</precioVenta>
+            <tipo>especial</tipo>
+            <imagenes>
+                <semilla>semilla.png</semilla>
+                <creciendo>caracol.png</creciendo>
+                <maduro>caracol_maduro.png</maduro>
+            </imagenes>
+        </semilla>
+
+        <semilla id="fresa">
+            <nombre>Fresa</nombre>
+            <tiempoMaduracion>2</tiempoMaduracion>
+            <precioCompra>5</precioCompra>
+            <precioVenta>18</precioVenta>
+            <tipo>fruta</tipo>
+            <imagenes>
+                <semilla>semilla.png</semilla>
+                <creciendo>fresa_creciendo.png</creciendo>
+                <maduro>fresa_maduro.png</maduro>
+            </imagenes>
+        </semilla>
+
+        <semilla id="girasol">
+            <nombre>Girasol</nombre>
+            <tiempoMaduracion>6</tiempoMaduracion>
+            <precioCompra>10</precioCompra>
+            <precioVenta>50</precioVenta>
+            <tipo>especial</tipo>
+            <imagenes>
+                <semilla>semilla.png</semilla>
+                <creciendo>girasol_creciendo.png</creciendo>
+                <maduro>girasol_maduro.png</maduro>
+            </imagenes>
+        </semilla>
+
+    </semillas>
+
+    <!-- Cada <herramienta> define los 3 niveles posibles con sus efectos y el coste de mejora para llegar a ese nivel -->
+    <herramientas>
+
+        <!-- AZADA: influye en la calidad y el precio de venta -->
+        <herramienta id="azada">
+            <nombre>Azada</nombre>
+            <imagen>azada.png</imagen>
+            <descripcion>Mejora la calidad del cultivo y el precio de venta.</descripcion>
+            <niveles>
+                <nivel numero="1">
+                    <nombre>Básico</nombre>
+                    <!-- Multiplicador sobre el precio de venta base -->
+                    <bonusPrecioVenta>1.0</bonusPrecioVenta>
+                    <!-- Coste para SUBIR a este nivel (nivel 1 = gratis, ya se tiene) -->
+                    <costeMejora>0</costeMejora>
+                </nivel>
+                <nivel numero="2">
+                    <nombre>Mejorado</nombre>
+                    <bonusPrecioVenta>1.25</bonusPrecioVenta>
+                    <costeMejora>80</costeMejora>
+                </nivel>
+                <nivel numero="3">
+                    <nombre>Maestro</nombre>
+                    <bonusPrecioVenta>1.5</bonusPrecioVenta>
+                    <costeMejora>200</costeMejora>
+                </nivel>
+            </niveles>
+        </herramienta>
+
+        <!-- REGADERA: reduce el tiempo de maduración -->
+        <herramienta id="regadera">
+            <nombre>Regadera</nombre>
+            <imagen>regadera.png</imagen>
+            <descripcion>Reduce el tiempo de maduración de los cultivos.</descripcion>
+            <niveles>
+                <nivel numero="1">
+                    <nombre>Básico</nombre>
+                    <!-- Ciclos que se restan al tiempo de maduración (0 = sin efecto) -->
+                    <bonusReduccionTiempo>0</bonusReduccionTiempo>
+                    <costeMejora>0</costeMejora>
+                </nivel>
+                <nivel numero="2">
+                    <nombre>Mejorado</nombre>
+                    <bonusReduccionTiempo>1</bonusReduccionTiempo>
+                    <costeMejora>100</costeMejora>
+                </nivel>
+                <nivel numero="3">
+                    <nombre>Maestro</nombre>
+                    <bonusReduccionTiempo>2</bonusReduccionTiempo>
+                    <costeMejora>250</costeMejora>
+                </nivel>
+            </niveles>
+        </herramienta>
+
+        <!-- HOZ: mejora la eficiencia de recolección -->
+        <herramienta id="hoz">
+            <nombre>Hoz</nombre>
+            <imagen>hoz.png</imagen>
+            <descripcion>Mejora la eficiencia de recolección.</descripcion>
+            <niveles>
+                <nivel numero="1">
+                    <nombre>Básico</nombre>
+                    <!-- Frutos extra obtenidos al cosechar (0 = solo 1 fruto) -->
+                    <bonusFrutosExtra>0</bonusFrutosExtra>
+                    <costeMejora>0</costeMejora>
+                </nivel>
+                <nivel numero="2">
+                    <nombre>Mejorado</nombre>
+                    <bonusFrutosExtra>1</bonusFrutosExtra>
+                    <costeMejora>120</costeMejora>
+                </nivel>
+                <nivel numero="3">
+                    <nombre>Maestro</nombre>
+                    <bonusFrutosExtra>2</bonusFrutosExtra>
+                    <costeMejora>300</costeMejora>
+                </nivel>
+            </niveles>
+        </herramienta>
+
+    </herramientas>
+
+</juego>
