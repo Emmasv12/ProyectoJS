@@ -1,34 +1,22 @@
 class DatosXML {
 
     constructor() {
-        // Documento XML cargado en memoria (lo rellenará cargarXML)
         this.xmlDoc = null;
     }
 
     // CARGA DEL XML
 
-    /**
-     * Carga el archivo datos.xml de forma asíncrona y lo parsea.
-     * Debe llamarse una sola vez al inicio, antes de crear el Juego.
-     * 
-     * @returns {Promise<void>} Resuelve cuando el XML está listo
-     */
     async cargarXML() {
-        // fetch obtiene el archivo del servidor (funciona en local con Live Server)
         const respuesta = await fetch("datos.xml");
 
         if (!respuesta.ok) {
             throw new Error(`No se pudo cargar datos.xml: ${respuesta.status}`);
         }
 
-        // Convierte la respuesta a texto plano
         const textoXML = await respuesta.text();
+        const parser   = new DOMParser();
+        this.xmlDoc    = parser.parseFromString(textoXML, "application/xml");
 
-        // DOMParser transforma el texto XML en un documento navegable
-        const parser = new DOMParser();
-        this.xmlDoc  = parser.parseFromString(textoXML, "application/xml");
-
-        // Comprueba que no hubo errores de parseo
         const error = this.xmlDoc.querySelector("parsererror");
         if (error) {
             throw new Error("El XML no es válido: " + error.textContent);
@@ -38,59 +26,26 @@ class DatosXML {
     // EXTRACCIÓN DE SEMILLAS
 
     /**
-     * Lee todos los nodos <semilla> del XML y los convierte
-     * en instancias de la clase Semilla lista para usar en el juego.
-     * 
-     * @returns {Semilla[]} Array con todas las semillas del catálogo
+     * Devuelve SOLO los nodos <semilla> que son hijos directos de <semillas>,
+     * ignorando el <semilla> que está dentro de <imagenes>.
+     * Usa XPath /juego/semillas/semilla para ser explícito con la ruta.
+     * @returns {Semilla[]}
      */
     obtenerTodasLasSemillas() {
         if (!this.xmlDoc) return [];
 
-        // querySelectorAll sobre el xmlDoc funciona igual que en HTML
-        const nodosSemilla = this.xmlDoc.querySelectorAll("semilla");
-        const semillas     = [];
-
-        nodosSemilla.forEach(nodo => {
-            semillas.push(this._nodoASemilla(nodo));
-        });
-
-        return semillas;
-    }
-
-    /**
-     * Filtra semillas del XML usando XPath según un criterio y valor dados.
-     * Este método es el núcleo del sistema de filtrado de la tienda.
-     *
-     * Ejemplos de uso:
-     *   filtrarSemillas("tipo",             "hortaliza")  → hortalizas
-     *   filtrarSemillas("precioVenta",      "20")         → precio exacto 20
-     *   filtrarSemillas("tiempoMaduracion", "3")          → maduración en 3 ciclos
-     *
-     * @param {string} campo  - Nombre del elemento XML por el que filtrar
-     * @param {string} valor  - Valor a buscar en ese elemento
-     * @returns {Semilla[]}   - Semillas que cumplen el filtro
-     */
-    filtrarSemillas(campo, valor) {
-        if (!this.xmlDoc) return [];
-
-        // Construye la expresión XPath:
-        // Busca <semilla> cuyo hijo <campo> tenga exactamente ese texto
-        // Ejemplo: //semilla[tipo='hortaliza']
-        const expresionXPath = `//semilla[${campo}='${valor}']`;
-
-        // XPathResult.ORDERED_NODE_ITERATOR_TYPE devuelve nodos en orden de documento
+        // XPath con ruta absoluta: solo <semilla> hijos directos de <semillas>
+        // Esto evita seleccionar el <semilla> de dentro de <imagenes>
         const resultado = this.xmlDoc.evaluate(
-            expresionXPath,
+            "/juego/semillas/semilla",
             this.xmlDoc,
-            null,                                     // sin resolver de namespace
+            null,
             XPathResult.ORDERED_NODE_ITERATOR_TYPE,
             null
         );
 
-        // Itera el resultado de XPath (no es un array, hay que usar iterateNext)
         const semillas = [];
-        let nodo       = resultado.iterateNext();
-
+        let nodo = resultado.iterateNext();
         while (nodo) {
             semillas.push(this._nodoASemilla(nodo));
             nodo = resultado.iterateNext();
@@ -100,19 +55,47 @@ class DatosXML {
     }
 
     /**
-     * Filtra semillas cuyo precio de venta sea MENOR O IGUAL al máximo dado.
-     * Útil para mostrar semillas asequibles al jugador en la tienda.
+     * Filtra semillas usando XPath según campo y valor.
+     * Usa ruta desde /juego/semillas/semilla para no mezclar con <imagenes>.
      *
-     * Expresión XPath: //semilla[precioVenta <= maxPrecio]
-     *
-     * @param {number} maxPrecio - Precio de venta máximo (inclusive)
+     * @param {string} campo  - Elemento XML por el que filtrar (ej: "tipo")
+     * @param {string} valor  - Valor buscado (ej: "hortaliza")
+     * @returns {Semilla[]}
+     */
+    filtrarSemillas(campo, valor) {
+        if (!this.xmlDoc) return [];
+
+        // Ruta completa para evitar coger el nodo <semilla> de <imagenes>
+        const expresionXPath = `/juego/semillas/semilla[${campo}='${valor}']`;
+
+        const resultado = this.xmlDoc.evaluate(
+            expresionXPath,
+            this.xmlDoc,
+            null,
+            XPathResult.ORDERED_NODE_ITERATOR_TYPE,
+            null
+        );
+
+        const semillas = [];
+        let nodo = resultado.iterateNext();
+        while (nodo) {
+            semillas.push(this._nodoASemilla(nodo));
+            nodo = resultado.iterateNext();
+        }
+
+        return semillas;
+    }
+
+    /**
+     * Filtra semillas cuyo precioVenta sea menor o igual al máximo.
+     * XPath: /juego/semillas/semilla[precioVenta<=maxPrecio]
+     * @param {number} maxPrecio
      * @returns {Semilla[]}
      */
     filtrarSemillasPorPrecioMaximo(maxPrecio) {
         if (!this.xmlDoc) return [];
 
-        // XPath con operador de comparación numérica
-        const expresionXPath = `//semilla[precioVenta<=${maxPrecio}]`;
+        const expresionXPath = `/juego/semillas/semilla[precioVenta<=${maxPrecio}]`;
 
         const resultado = this.xmlDoc.evaluate(
             expresionXPath,
@@ -123,8 +106,7 @@ class DatosXML {
         );
 
         const semillas = [];
-        let nodo       = resultado.iterateNext();
-
+        let nodo = resultado.iterateNext();
         while (nodo) {
             semillas.push(this._nodoASemilla(nodo));
             nodo = resultado.iterateNext();
@@ -134,18 +116,15 @@ class DatosXML {
     }
 
     /**
-     * Filtra semillas cuyo tiempo de maduración sea MENOR O IGUAL al dado.
-     * Útil para mostrar semillas que maduran rápido.
-     *
-     * Expresión XPath: //semilla[tiempoMaduracion <= maxTiempo]
-     *
-     * @param {number} maxTiempo - Tiempo máximo de maduración (inclusive)
+     * Filtra semillas cuyo tiempoMaduracion sea menor o igual al máximo.
+     * XPath: /juego/semillas/semilla[tiempoMaduracion<=maxTiempo]
+     * @param {number} maxTiempo
      * @returns {Semilla[]}
      */
     filtrarSemillasPorTiempoMaximo(maxTiempo) {
         if (!this.xmlDoc) return [];
 
-        const expresionXPath = `//semilla[tiempoMaduracion<=${maxTiempo}]`;
+        const expresionXPath = `/juego/semillas/semilla[tiempoMaduracion<=${maxTiempo}]`;
 
         const resultado = this.xmlDoc.evaluate(
             expresionXPath,
@@ -156,8 +135,7 @@ class DatosXML {
         );
 
         const semillas = [];
-        let nodo       = resultado.iterateNext();
-
+        let nodo = resultado.iterateNext();
         while (nodo) {
             semillas.push(this._nodoASemilla(nodo));
             nodo = resultado.iterateNext();
@@ -166,15 +144,11 @@ class DatosXML {
         return semillas;
     }
 
-    // ============================================================
     // EXTRACCIÓN DE HERRAMIENTAS
-    // ============================================================
 
     /**
-     * Lee todos los nodos <herramienta> del XML y devuelve un objeto
-     * con la información completa de cada una, incluyendo sus 3 niveles.
-     *
-     * @returns {Object} Mapa { id: { nombre, imagen, descripcion, niveles[] } }
+     * Lee las herramientas del XML y devuelve un mapa { id: datos }.
+     * @returns {Object}
      */
     obtenerHerramientas() {
         if (!this.xmlDoc) return {};
@@ -188,24 +162,17 @@ class DatosXML {
             const imagen      = this._texto(nodo, "imagen");
             const descripcion = this._texto(nodo, "descripcion");
 
-            // Lee los 3 niveles de la herramienta
             const niveles = [];
             nodo.querySelectorAll("nivel").forEach(nivelNodo => {
                 const numero = parseInt(nivelNodo.getAttribute("numero"));
-
-                // Obtiene el valor del bonus correspondiente a esta herramienta
-                // (cada herramienta tiene un elemento de bonus distinto)
                 let bonus = {};
 
-                // Azada → bonusPrecioVenta
                 const bpv = nivelNodo.querySelector("bonusPrecioVenta");
                 if (bpv) bonus.precioVenta = parseFloat(bpv.textContent.trim());
 
-                // Regadera → bonusReduccionTiempo
                 const brt = nivelNodo.querySelector("bonusReduccionTiempo");
                 if (brt) bonus.reduccionTiempo = parseInt(brt.textContent.trim());
 
-                // Hoz → bonusFrutosExtra
                 const bfe = nivelNodo.querySelector("bonusFrutosExtra");
                 if (bfe) bonus.frutosExtra = parseInt(bfe.textContent.trim());
 
@@ -224,14 +191,11 @@ class DatosXML {
     }
 
     /**
-     * Obtiene el coste de mejora para subir una herramienta al nivel indicado.
-     * Usa XPath para localizar directamente el nodo <nivel> correcto.
-     *
-     * Expresión XPath: //herramienta[@id='azada']/niveles/nivel[@numero='2']/costeMejora
-     *
-     * @param {string} idHerramienta - "azada" | "regadera" | "hoz"
-     * @param {number} nivel         - Nivel destino (2 o 3)
-     * @returns {number}             - Coste en monedas, o Infinity si no existe
+     * Obtiene el coste de mejora de una herramienta a un nivel concreto.
+     * Usa XPath con ruta completa.
+     * @param {string} idHerramienta
+     * @param {number} nivel
+     * @returns {number}
      */
     obtenerCosteMejora(idHerramienta, nivel) {
         if (!this.xmlDoc) return Infinity;
@@ -243,7 +207,7 @@ class DatosXML {
             expresionXPath,
             this.xmlDoc,
             null,
-            XPathResult.FIRST_ORDERED_NODE_TYPE,   // Solo necesitamos el primer resultado
+            XPathResult.FIRST_ORDERED_NODE_TYPE,
             null
         );
 
@@ -251,15 +215,10 @@ class DatosXML {
         return nodo ? parseInt(nodo.textContent.trim()) : Infinity;
     }
 
-    // ============================================================
-    // MÉTODOS PRIVADOS DE AYUDA
-    // ============================================================
+    // MÉTODOS PRIVADOS
 
     /**
-     * Extrae el texto de un elemento hijo directo de un nodo dado.
-     * @param {Element} nodo         - Nodo padre
-     * @param {string}  nombreHijo   - Tag del hijo cuyo texto se quiere
-     * @returns {string}
+     * Extrae el texto de un hijo por querySelector.
      */
     _texto(nodo, nombreHijo) {
         const hijo = nodo.querySelector(nombreHijo);
@@ -267,19 +226,37 @@ class DatosXML {
     }
 
     /**
-     * Convierte un nodo XML <semilla> en una instancia de la clase Semilla.
-     * @param {Element} nodo - Nodo <semilla> del XML
+     * Convierte un nodo <semilla> del catálogo en instancia de Semilla.
+     *
+     * Las imágenes se leen recorriendo los children DIRECTOS de <imagenes>
+     * por tagName, sin usar querySelector, para evitar que encuentre el
+     * nodo <semilla> padre u otros nodos con el mismo nombre.
+     *
+     * @param {Element} nodo - Nodo <semilla> hijo de <semillas>
      * @returns {Semilla}
      */
     _nodoASemilla(nodo) {
+        const imgs = nodo.querySelector("imagenes");
+
+        // Lee un hijo directo de <imagenes> por su tagName exacto
+        const imgTexto = (contenedor, tag) => {
+            if (!contenedor) return "";
+            for (const hijo of contenedor.children) {
+                if (hijo.tagName === tag) return hijo.textContent.trim();
+            }
+            return "";
+        };
+
+        const precioCompraRaw = parseInt(this._texto(nodo, "precioCompra"));
+
         return new Semilla(
             this._texto(nodo, "nombre"),
             parseInt(this._texto(nodo, "tiempoMaduracion")),
             parseInt(this._texto(nodo, "precioVenta")),
-            this._texto(nodo, "semilla"),       // imgSemilla (dentro de <imagenes>)
-            this._texto(nodo, "creciendo"),     // imgCreciendo
-            this._texto(nodo, "maduro"),         // imgMaduro
-            parseInt(this._texto(nodo, "precioCompra")),
+            imgTexto(imgs, "semilla"),    // imgSemilla
+            imgTexto(imgs, "creciendo"),  // imgCreciendo
+            imgTexto(imgs, "maduro"),     // imgMaduro
+            isNaN(precioCompraRaw) ? 0 : precioCompraRaw,
             this._texto(nodo, "tipo")
         );
     }
