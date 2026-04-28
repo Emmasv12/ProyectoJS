@@ -696,3 +696,41 @@ body {
     0%, 100% { outline-color: var(--color-dorado); }
     50%       { outline-color: transparent; }
 }
+
+/* ============================================================
+   INDICADORES VISUALES DE ESTADO EN PARCELAS
+   ============================================================ */
+
+/* Texto de ciclos restantes / "¡Lista!" */
+.parcela-estado-texto {
+    font-family: var(--font-retro);
+    font-size: 0.95rem;
+    color: #ddd;
+    display: block;
+    margin-top: 2px;
+    letter-spacing: 0.5px;
+}
+
+.parcela-estado-texto.maduro {
+    color: var(--color-dorado);
+    font-size: 1rem;
+    animation: parpadeo 1s step-end infinite;
+}
+
+/* Porcentaje numérico debajo de la barra */
+.parcela-pct {
+    font-family: var(--font-pixel);
+    font-size: 0.45rem;
+    color: #aaa;
+    margin-top: 2px;
+    display: block;
+}
+
+/* Texto hint en parcela vacía */
+.parcela-hint {
+    font-family: var(--font-retro);
+    font-size: 1rem;
+    color: #aaa;
+    display: block;
+    margin: 2px 0;
+}

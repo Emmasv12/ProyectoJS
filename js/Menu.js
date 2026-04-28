@@ -165,8 +165,8 @@ class Menu {
 
     actualizarResumen() {
         const stats = Juego.calcularStatsPorDificultad(this.config.dificultad);
-        document.getElementById("resumenDinero").textContent  = `💰 Dinero inicial: ${stats.dinero}`;
-        document.getElementById("resumenEnergia").textContent = `⚡ Energía inicial: ${stats.energia}`;
+        document.getElementById("resumenDinero").textContent  = `Dinero inicial: ${stats.dinero}`;
+        document.getElementById("resumenEnergia").textContent = `Energia inicial: ${stats.energia}`;
     }
 
     // ============================================================

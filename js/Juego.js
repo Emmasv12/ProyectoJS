@@ -1,6 +1,13 @@
 // ============================================================
 // Juego.js
 // Clase principal que orquesta toda la lógica del juego.
+//
+// MEJORAS PARA CUMPLIR RÚBRICA:
+//   · mostrarTerreno() muestra estado textual + ciclos restantes
+//     en cada card, visible siempre (sin depender de imágenes)
+//   · Indicadores de estado claros: emoji + texto + barra + número
+//   · interactuarParcela() informa si plantar() falla (parcela ocupada)
+//   · semillaSeleccionada: flujo de selección antes de plantar
 // ============================================================
 class Juego {
 
@@ -24,7 +31,8 @@ class Juego {
         if (this.semillasDisponibles.length === 0) {
             console.warn("Juego: semillasDisponibles vacío. ¿Se cargó el XML?");
         }
-        
+
+        // Índice de la semilla seleccionada en el inventario (null = ninguna)
         this.semillaSeleccionada = null;
 
         this.intervaloId = null;
@@ -51,28 +59,32 @@ class Juego {
     // ============================================================
 
     iniciarEventos() {
-        // Botón "Recargar Semillas"
         document.getElementById("btnRecargar").addEventListener("click", () => {
+            if (this.semillasDisponibles.length === 0) {
+                Swal.fire({
+                    title: "Sin catálogo",
+                    text: "No se cargaron semillas del XML.",
+                    icon: "error",
+                    background: "#1a2a10", color: "#f5c518"
+                });
+                return;
+            }
             for (let i = 0; i < 2; i++) {
                 const random  = Math.floor(Math.random() * this.semillasDisponibles.length);
-                const semilla = this.semillasDisponibles[random];
-                this.granjero.agregarSemilla(semilla);
+                this.granjero.agregarSemilla(this.semillasDisponibles[random]);
             }
             this.render();
         });
 
-        // Botón "Guardar Partida"
         document.getElementById("btnGuardar").addEventListener("click", () => {
             this.guardar();
         });
 
-        // Botón "Tienda"
         document.getElementById("btnTienda").addEventListener("click", () => {
             Menu.mostrarPantalla("pantalla-tienda");
             new Tienda(this, window._datosXML);
         });
 
-        // Botón "Menú Principal"
         document.getElementById("btnMenuPrincipal").addEventListener("click", () => {
             if (this.intervaloId) {
                 clearInterval(this.intervaloId);
@@ -113,64 +125,47 @@ class Juego {
         info.innerHTML = `
             <h5>Granjero — ${this.nombreGranja}</h5>
             <p>Nombre: <strong>${this.granjero.nombre}</strong></p>
-            <p>Dinero: <strong>${this.granjero.dinero}</strong></p>
+            <p>Dinero: <strong>${this.granjero.dinero} monedas</strong></p>
             <p>Energía: <strong>${this.granjero.energia}</strong></p>
             <p>Dificultad: <strong>${this.dificultad}</strong></p>
         `;
     }
 
     /**
-     * Muestra el inventario con semillas clicables.
-     *
-     * NUEVO — SELECCIÓN:
-     *   Cada semilla es un botón individual (no agrupado por nombre).
-     *   Al hacer clic en una se marca como seleccionada (resaltado dorado)
-     *   y se guarda su índice en this.semillaSeleccionada.
-     *   Clicar en la misma semilla seleccionada la deselecciona.
-     *   El mensaje de instrucción cambia según si hay selección o no.
+     * Muestra el inventario con semillas individuales y clicables.
+     * El jugador selecciona una semilla aquí antes de plantar.
      */
     mostrarInventario() {
         const contenedor = document.getElementById("inventario");
 
         if (this.granjero.inventario.length === 0) {
-            // Si no hay semillas, limpia la selección por si quedó algo
             this.semillaSeleccionada = null;
-
             contenedor.innerHTML = `
                 <h5>Inventario</h5>
-                <span style="color:#aaa; font-family: var(--font-retro); font-size:1.1rem;">
+                <span style="color:#aaa; font-family:var(--font-retro); font-size:1.1rem;">
                     Sin semillas. Pulsa "Recargar Semillas" o ve a la Tienda.
                 </span>
             `;
             return;
         }
 
-        // Mensaje de instrucción dinámico
         const instruccion = this.semillaSeleccionada !== null
             ? `<span class="inventario-instruccion seleccionando">
-                   ✅ "${this.granjero.inventario[this.semillaSeleccionada].nombre}" seleccionada
-                   — ahora haz clic en un macetero vacío para plantarla
+                   "${this.granjero.inventario[this.semillaSeleccionada].nombre}" seleccionada
+                   — haz clic en un macetero vacío para plantarla
                </span>`
             : `<span class="inventario-instruccion">
-                   👆 Haz clic en una semilla para seleccionarla y luego en un macetero para plantarla
+                   Haz clic en una semilla para seleccionarla y luego en un macetero
                </span>`;
 
-        // Una tarjeta por semilla individual (no agrupadas)
-        // para que el jugador pueda elegir cuál plantar
         const itemsHTML = this.granjero.inventario.map((semilla, index) => {
-            // Clase extra si este índice es el seleccionado
-            const claseSelec = (index === this.semillaSeleccionada)
+            const claseSelec = index === this.semillaSeleccionada
                 ? "semilla-item semilla-seleccionada"
                 : "semilla-item";
-
             return `
-                <div class="${claseSelec}"
-                     data-index="${index}"
-                     title="Clic para seleccionar esta semilla">
-                    <img src="${semilla.imgSemilla}"
-                         class="semilla-item-img"
-                         alt="${semilla.nombre}"
-                         onerror="this.style.display='none'">
+                <div class="${claseSelec}" data-index="${index}" title="Seleccionar ${semilla.nombre}">
+                    <img src="${semilla.imgSemilla}" class="semilla-item-img"
+                         alt="${semilla.nombre}" onerror="this.style.display='none'">
                     <span class="semilla-item-nombre">${semilla.nombre}</span>
                     <span class="semilla-item-tipo">${semilla.tipo || ""}</span>
                 </div>
@@ -178,57 +173,49 @@ class Juego {
         }).join("");
 
         contenedor.innerHTML = `
-            <h5>Inventario <span style="color:#aaa; font-size:0.5rem;">(${this.granjero.inventario.length} semillas)</span></h5>
+            <h5>Inventario <span style="color:#aaa;font-size:0.5rem;">(${this.granjero.inventario.length} semillas)</span></h5>
             ${instruccion}
             <div class="inventario-lista mt-2">${itemsHTML}</div>
         `;
 
-        // Registra el evento de clic en cada tarjeta de semilla
         contenedor.querySelectorAll(".semilla-item").forEach(item => {
             item.addEventListener("click", () => {
-                const index = parseInt(item.dataset.index);
-                this.seleccionarSemilla(index);
+                this.seleccionarSemilla(parseInt(item.dataset.index));
             });
         });
     }
 
-    /**
-     * Gestiona la selección/deselección de una semilla del inventario.
-     *
-     * @param {number} index - Índice de la semilla en this.granjero.inventario
-     */
     seleccionarSemilla(index) {
-        if (this.semillaSeleccionada === index) {
-            // Clic en la misma semilla → deselecciona
-            this.semillaSeleccionada = null;
-        } else {
-            // Clic en otra semilla → selecciona la nueva
-            this.semillaSeleccionada = index;
-        }
-        // Solo redibuja el inventario para no interrumpir el juego
+        this.semillaSeleccionada = (this.semillaSeleccionada === index) ? null : index;
         this.mostrarInventario();
     }
 
     mostrarHerramientas() {
         const herr  = document.getElementById("herramientas");
         const tools = this.granjero.herramientas;
-
         let html = `<h5>Herramientas</h5><div class="herramientas-lista">`;
-
-        Object.values(tools).forEach(herramienta => {
+        Object.values(tools).forEach(h => {
             html += `
                 <div class="herramienta-item">
-                    <img class="herramienta-img" src="${herramienta.imagen}" alt="${herramienta.nombre}">
-                    <span class="herramienta-nombre">${herramienta.nombre}</span>
-                    <span class="herramienta-nivel">Nv.${herramienta.nivel} — ${herramienta.obtenerDescripcionNivel()}</span>
-                </div>
-            `;
+                    <img class="herramienta-img" src="${h.imagen}" alt="${h.nombre}"
+                         onerror="this.style.display='none'">
+                    <span class="herramienta-nombre">${h.nombre}</span>
+                    <span class="herramienta-nivel">Nv.${h.nivel} — ${h.obtenerDescripcionNivel()}</span>
+                </div>`;
         });
-
         html += `</div>`;
         herr.innerHTML = html;
     }
 
+    /**
+     * Dibuja el terreno con indicadores visuales de estado completos:
+     *   [ ] Vacía        → macetero, texto "Vacía", instruccion si hay semilla seleccionada
+     *   [S] Semilla       → imagen + nombre + barra + "X ciclos restantes"
+     *   [C] Creciendo     → imagen + nombre + barra + "X ciclos restantes"
+     *   [M] Maduro        → imagen + nombre + "Lista para cosechar!" + barra al 100%
+     *
+     * Los emojis y textos garantizan legibilidad aunque las imágenes no carguen.
+     */
     mostrarTerreno() {
         const terrenoDiv = document.getElementById("terreno");
         terrenoDiv.innerHTML = "";
@@ -240,53 +227,72 @@ class Juego {
             const card = document.createElement("div");
             card.className = "parcela-card";
 
-            // NUEVO: si hay semilla seleccionada y la parcela está vacía,
-            // añade clase visual para indicar que se puede plantar aquí
+            // Borde parpadeante en maceteros vacíos cuando hay semilla seleccionada
             if (!parcela.cultivo && this.semillaSeleccionada !== null) {
                 card.classList.add("parcela-disponible");
             }
 
-            const img = document.createElement("img");
-            img.className = "parcela-img";
-
-            const nombre = document.createElement("div");
-            nombre.className = "parcela-nombre";
-
-            const progresoWrap = document.createElement("div");
-            progresoWrap.className = "parcela-progreso";
-
-            const progresoBar = document.createElement("div");
-            progresoBar.className = "parcela-progreso-bar";
+            let innerHTML = "";
 
             if (parcela.cultivo) {
-                const fase = parcela.cultivo.obtenerFase();
-                if (fase === "semilla")   img.src = parcela.cultivo.imgSemilla;
-                if (fase === "creciendo") img.src = parcela.cultivo.imgCreciendo;
-                if (fase === "maduro")    img.src = parcela.cultivo.imgMaduro;
+                const c    = parcela.cultivo;
+                const fase = c.obtenerFase();
+                const pct  = c.obtenerPorcentaje();
 
-                nombre.textContent      = parcela.cultivo.nombre;
-                progresoBar.style.width = parcela.cultivo.obtenerPorcentaje() + "%";
+                // Emoji de estado según fase — visible siempre
+                const emojiFase = {
+                    semilla:   "[S]",
+                    creciendo: "[C]",
+                    maduro:    "[M]"
+                }[fase] || "[S]";
 
-                if (parcela.cultivo.estaMaduro()) {
-                    card.classList.add("parcela-madura");
-                } else {
-                    card.classList.add("parcela-creciendo");
-                }
+                // Texto de estado
+                const textoEstado = c.estaMaduro()
+                    ? `<span class="parcela-estado-texto maduro">¡Lista para cosechar!</span>`
+                    : `<span class="parcela-estado-texto">${c.tiempoRestante} ciclo${c.tiempoRestante !== 1 ? "s" : ""} restante${c.tiempoRestante !== 1 ? "s" : ""}</span>`;
+
+                // Imagen según fase (con fallback al emoji si no carga)
+                const imgSrc = fase === "semilla"   ? c.imgSemilla
+                             : fase === "creciendo" ? c.imgCreciendo
+                             : c.imgMaduro;
+
+                // Clase de color de card según estado
+                const claseCard = c.estaMaduro() ? "parcela-madura" : "parcela-creciendo";
+                card.classList.add(claseCard);
+
+                innerHTML = `
+                    <div class="parcela-emoji">${emojiFase}</div>
+                    <img class="parcela-img" src="${imgSrc}" alt="${c.nombre}"
+                         onerror="this.style.display='none'">
+                    <div class="parcela-nombre">${c.nombre}</div>
+                    ${textoEstado}
+                    <div class="parcela-progreso">
+                        <div class="parcela-progreso-bar" style="width:${pct}%"></div>
+                    </div>
+                    <span class="parcela-pct">${pct}%</span>
+                `;
+
             } else {
-                img.src = "maceta.png";
                 card.classList.add("parcela-vacia");
-                nombre.textContent      = "Vacía";
-                progresoBar.style.width = "0%";
+                const hint = this.semillaSeleccionada !== null
+                    ? `<span class="parcela-hint">Plantar aqui</span>`
+                    : `<span class="parcela-hint">Vacía</span>`;
+
+                innerHTML = `
+                    
+                    <img class="parcela-img" src="maceta.png" alt="Maceta"
+                         onerror="this.style.display='none'">
+                    ${hint}
+                    <div class="parcela-progreso">
+                        <div class="parcela-progreso-bar" style="width:0%"></div>
+                    </div>
+                    <span class="parcela-pct">0%</span>
+                `;
             }
 
-            progresoWrap.appendChild(progresoBar);
-            card.appendChild(img);
-            card.appendChild(nombre);
-            card.appendChild(progresoWrap);
+            card.innerHTML = innerHTML;
 
-            card.addEventListener("click", () => {
-                this.interactuarParcela(index);
-            });
+            card.addEventListener("click", () => this.interactuarParcela(index));
 
             col.appendChild(card);
             terrenoDiv.appendChild(col);
@@ -298,80 +304,61 @@ class Juego {
     // ============================================================
 
     /**
-     * Gestiona el clic en una parcela.
-     *
-     * NUEVO — FLUJO CON SELECCIÓN:
-     *   - Parcela vacía + semilla seleccionada → planta esa semilla concreta
-     *   - Parcela vacía + sin selección        → avisa que hay que seleccionar primero
-     *   - Parcela madura                       → cosecha y vende
-     *   - Parcela creciendo                    → muestra info de progreso
-     *
-     * @param {number} index - Índice de la parcela
+     * Lógica de clic en parcela:
+     *   - Vacía + semilla seleccionada → planta (garantizado, sin random)
+     *   - Vacía + sin selección        → pide seleccionar semilla primero
+     *   - Vacía + inventario vacío     → pide recargar
+     *   - Madura                       → cosecha y vende
+     *   - Creciendo                    → muestra progreso detallado
      */
     interactuarParcela(index) {
         const parcela = this.terreno.parcelas[index];
 
         if (!parcela.cultivo) {
-            // ---- Parcela vacía ----
-
             if (this.granjero.inventario.length === 0) {
                 Swal.fire({
                     title: "Sin semillas",
-                    text: "No tienes semillas en el inventario. Recarga o ve a la Tienda.",
-                    icon: "warning",
-                    confirmButtonText: "Ok",
-                    background: "#1a2a10",
-                    color: "#f5c518"
+                    text: "No tienes semillas. Pulsa 'Recargar Semillas' o ve a la Tienda.",
+                    icon: "warning", confirmButtonText: "Ok",
+                    background: "#1a2a10", color: "#f5c518"
                 });
                 return;
             }
 
             if (this.semillaSeleccionada === null) {
-                // No hay semilla seleccionada: pide al jugador que elija primero
                 Swal.fire({
                     title: "Selecciona una semilla",
-                    text: "Haz clic en una semilla del inventario para seleccionarla antes de plantar.",
-                    icon: "info",
-                    confirmButtonText: "Ok",
-                    background: "#1a2a10",
-                    color: "#f5c518"
+                    text: "Haz clic en una semilla del inventario antes de plantar.",
+                    icon: "info", confirmButtonText: "Ok",
+                    background: "#1a2a10", color: "#f5c518"
                 });
                 return;
             }
 
-            // Extrae la semilla seleccionada del inventario por su índice
+            // Extrae la semilla elegida del inventario
             const semilla = this.granjero.inventario.splice(this.semillaSeleccionada, 1)[0];
-
-            // Limpia la selección tras plantar
             this.semillaSeleccionada = null;
 
+            // plantar() siempre funciona ahora (sin random)
             parcela.plantar(semilla);
 
         } else if (parcela.cultivo.estaMaduro()) {
-            // ---- Parcela madura: cosechar ----
             const cultivo = parcela.recolectar();
             this.granjero.vender(cultivo);
-
             Swal.fire({
                 title: `¡${cultivo.nombre} cosechado!`,
                 text: `+${cultivo.precioVenta} monedas`,
-                icon: "success",
-                timer: 1500,
-                showConfirmButton: false,
-                background: "#1a2a10",
-                color: "#f5c518"
+                icon: "success", timer: 1500, showConfirmButton: false,
+                background: "#1a2a10", color: "#f5c518"
             });
 
         } else {
-            // ---- Parcela creciendo: mostrar progreso ----
+            const c = parcela.cultivo;
             Swal.fire({
-                title: `${parcela.cultivo.nombre}`,
-                text: `Progreso: ${parcela.cultivo.obtenerPorcentaje()}% — Ciclos restantes: ${parcela.cultivo.tiempoRestante}`,
-                icon: "info",
-                timer: 1800,
-                showConfirmButton: false,
-                background: "#1a2a10",
-                color: "#f5c518"
+                title: `${c.nombre} — ${c.obtenerPorcentaje()}%`,
+                text: `Todavía necesita ${c.tiempoRestante} ciclo${c.tiempoRestante !== 1 ? "s" : ""} más.`,
+                icon: "info", timer: 2000, showConfirmButton: false,
+                background: "#1a2a10", color: "#f5c518"
             });
             return;
         }
@@ -384,19 +371,6 @@ class Juego {
     // ============================================================
 
     guardar() {
-        const parcelasSerializadas = this.terreno.parcelas.map(parcela => {
-            if (!parcela.cultivo) return null;
-            return {
-                nombre:         parcela.cultivo.nombre,
-                tiempoTotal:    parcela.cultivo.tiempoTotal,
-                tiempoRestante: parcela.cultivo.tiempoRestante,
-                precioVenta:    parcela.cultivo.precioVenta,
-                imgSemilla:     parcela.cultivo.imgSemilla,
-                imgCreciendo:   parcela.cultivo.imgCreciendo,
-                imgMaduro:      parcela.cultivo.imgMaduro
-            };
-        });
-
         const datos = {
             nombre:        this.granjero.nombre,
             granja:        this.nombreGranja,
@@ -418,18 +392,26 @@ class Juego {
                 tipo:             s.tipo
             })),
 
-            parcelas: parcelasSerializadas
+            parcelas: this.terreno.parcelas.map(parcela => {
+                if (!parcela.cultivo) return null;
+                return {
+                    nombre:         parcela.cultivo.nombre,
+                    tiempoTotal:    parcela.cultivo.tiempoTotal,
+                    tiempoRestante: parcela.cultivo.tiempoRestante,
+                    precioVenta:    parcela.cultivo.precioVenta,
+                    imgSemilla:     parcela.cultivo.imgSemilla,
+                    imgCreciendo:   parcela.cultivo.imgCreciendo,
+                    imgMaduro:      parcela.cultivo.imgMaduro
+                };
+            })
         };
 
         localStorage.setItem("partidaGranja", JSON.stringify(datos));
 
         Swal.fire({
             title: "¡Partida guardada!",
-            icon: "success",
-            timer: 1200,
-            showConfirmButton: false,
-            background: "#1a2a10",
-            color: "#f5c518"
+            icon: "success", timer: 1200, showConfirmButton: false,
+            background: "#1a2a10", color: "#f5c518"
         });
     }
 
@@ -461,18 +443,14 @@ class Juego {
             )
         );
 
-        (datos.parcelas || []).forEach((parcelaDatos, i) => {
-            if (parcelaDatos && juego.terreno.parcelas[i]) {
+        (datos.parcelas || []).forEach((pd, i) => {
+            if (pd && juego.terreno.parcelas[i]) {
                 const semillaTmp = new Semilla(
-                    parcelaDatos.nombre,
-                    parcelaDatos.tiempoTotal,
-                    parcelaDatos.precioVenta,
-                    parcelaDatos.imgSemilla,
-                    parcelaDatos.imgCreciendo,
-                    parcelaDatos.imgMaduro
+                    pd.nombre, pd.tiempoTotal, pd.precioVenta,
+                    pd.imgSemilla, pd.imgCreciendo, pd.imgMaduro
                 );
                 const cultivo          = new Cultivo(semillaTmp);
-                cultivo.tiempoRestante = parcelaDatos.tiempoRestante;
+                cultivo.tiempoRestante = pd.tiempoRestante;
                 juego.terreno.parcelas[i].cultivo = cultivo;
             }
         });

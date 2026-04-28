@@ -51,7 +51,7 @@ class Tienda {
                 <div class="card p-3 mb-3 text-center">
                     <h5>Tu dinero</h5>
                     <p id="tienda-dinero" style="font-size:1.5rem;">
-                         ${this.juego.granjero.dinero} monedas
+                        ${this.juego.granjero.dinero} monedas
                     </p>
                 </div>
 
@@ -186,10 +186,10 @@ class Tienda {
                     <img src="${semilla.imgMaduro}" class="parcela-img" alt="${semilla.nombre}">
                     <div class="parcela-nombre">${semilla.nombre}</div>
                     <div style="font-size:0.85rem; color:#aaa; margin-top:2px;">
-                         ${semilla.tiempoMaduracion} ciclos &nbsp;|&nbsp;  venta: ${semilla.precioVenta}
+                        ${semilla.tiempoMaduracion} ciclos | venta: ${semilla.precioVenta}
                     </div>
                     <div style="font-size:0.85rem; color:#aaa;">
-                         Tipo: ${semilla.tipo}
+                        Tipo: ${semilla.tipo}
                     </div>
                     <button
                         class="btn-pixel btn-pixel-verde mt-2"
@@ -308,7 +308,7 @@ class Tienda {
 
         // Actualiza el dinero mostrado en la tienda
         document.getElementById("tienda-dinero").textContent =
-            ` ${this.juego.granjero.dinero} monedas`;
+            `${this.juego.granjero.dinero} monedas`;
 
         this.renderInventario();
 
@@ -353,7 +353,7 @@ class Tienda {
         herr.nivel = nivelSig;
 
         document.getElementById("tienda-dinero").textContent =
-            ` ${this.juego.granjero.dinero} monedas`;
+            `${this.juego.granjero.dinero} monedas`;
 
         // Recarga la sección de herramientas para reflejar el nuevo nivel
         this.renderHerramientas();

@@ -5,26 +5,19 @@
 // ============================================================
 class Parcela {
 
-    /**
-     * Empieza vacía, sin ningún cultivo plantado.
-     */
     constructor() {
         this.cultivo = null; // null = parcela libre
     }
 
     /**
      * Planta una semilla en la parcela creando un nuevo Cultivo.
-     * Solo actúa si la parcela está vacía. Hay una probabilidad de fallo.
      * @param {Semilla} semilla - La semilla que se va a plantar
+     * @returns {boolean} true si se plantó, false si la parcela estaba ocupada
      */
     plantar(semilla) {
-        if (!this.cultivo) {
-            let porcentaje = Math.random();
-            if(porcentaje>0.5){
-                console.log(porcentaje);
-                this.cultivo = new Cultivo(semilla);
-            }
-        }
+        if (this.cultivo) return false; // parcela ocupada, no hace nada
+        this.cultivo = new Cultivo(semilla);
+        return true;
     }
 
     /**
@@ -34,7 +27,7 @@ class Parcela {
     recolectar() {
         if (this.cultivo && this.cultivo.estaMaduro()) {
             const cultivoRecolectado = this.cultivo;
-            this.cultivo = null; // La parcela queda libre para volver a plantar
+            this.cultivo = null;
             return cultivoRecolectado;
         }
         return null;
