@@ -25,6 +25,7 @@ class Herramienta {
             case 1: return "Básico";
             case 2: return "Mejorado";
             case 3: return "Maestro";
+            case 4: return "Rota";
             default: return "Desconocido";
         }
     }

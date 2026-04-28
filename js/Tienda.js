@@ -241,6 +241,14 @@ class Tienda {
         // Mapa: id del XML → clave en herramientasJuego
         const ids = ["azada", "regadera", "hoz"];
 
+        if(herramientasJuego == Math.random(0)){
+            herramientasJuego == null;
+            alert("se ha roto la herramienta")
+            if(herramientasJuego == null){
+                alert("hay que pagar para repararla (precio = 20€)")
+            }
+        }
+
         grid.innerHTML = ids.map(id => {
             const herr       = herramientasJuego[id];
             const nivelActual = herr.nivel;

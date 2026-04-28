@@ -8,6 +8,20 @@ class Botones {
         this.iniciarEventos();
     }
 
+    constructor(tienda){
+        this.tienda = tienda;
+        this.iniciarEventosTienda();
+    }
+
+    iniciarEventosTienda(){
+        document.getElementById("btnReparar").addEventListener("click", () => {
+            if(Herramienta == rota){
+                const dinero = dinero - 20;
+                const herramienta = 1;
+            }
+        })
+    }
+
     iniciarEventos() {
         // al pulsar recargar se anaden 2 semillas aleatorias al inventario del granjero
         document.getElementById("btnRecargar").addEventListener("click", () => {

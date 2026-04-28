@@ -35,6 +35,10 @@ class Juego {
         // Índice de la semilla seleccionada en el inventario (null = ninguna)
         this.semillaSeleccionada = null;
 
+        // Logro: dinero total acumulado vendiendo cultivos
+        this.totalGanado   = config.totalGanado   || 0;
+        this.logroMostrado = config.logroMostrado || false;
+
         this.intervaloId = null;
 
         this.iniciarEventos();
@@ -195,12 +199,15 @@ class Juego {
         const tools = this.granjero.herramientas;
         let html = `<h5>Herramientas</h5><div class="herramientas-lista">`;
         Object.values(tools).forEach(h => {
+            const estadoHTML = h.rota
+                ? `<span class="herramienta-rota">ROTA</span>` //Mensaje de que la herramienta se ha roto
+                : `<span class="herramienta-nivel">Nv.${h.nivel} — ${h.obtenerDescripcionNivel()}</span>`;
             html += `
-                <div class="herramienta-item">
+                <div class="herramienta-item${h.rota ? " herramienta-item-rota" : ""}">
                     <img class="herramienta-img" src="${h.imagen}" alt="${h.nombre}"
                          onerror="this.style.display='none'">
                     <span class="herramienta-nombre">${h.nombre}</span>
-                    <span class="herramienta-nivel">Nv.${h.nivel} — ${h.obtenerDescripcionNivel()}</span>
+                    ${estadoHTML}
                 </div>`;
         });
         html += `</div>`;
@@ -339,16 +346,42 @@ class Juego {
             const semilla = this.granjero.inventario.splice(this.semillaSeleccionada, 1)[0];
             this.semillaSeleccionada = null;
 
-            // plantar() siempre funciona ahora (sin random)
             parcela.plantar(semilla);
 
         } else if (parcela.cultivo.estaMaduro()) {
+            // La hoz se usa al recolectar — verificar si está rota
+            const hoz = this.granjero.herramientas.hoz;
+            if (hoz && hoz.rota) {
+                Swal.fire({
+                    title: "Hoz rota",
+                    text: "No puedes recolectar: la hoz está rota. Reparala en la Tienda.",
+                    icon: "error", confirmButtonText: "Ok",
+                    background: "#1a2a10", color: "#f5c518"
+                });
+                return;
+            }
+
             const cultivo = parcela.recolectar();
             this.granjero.vender(cultivo);
+
+            // Acumular dinero ganado para el logro
+            this.totalGanado += cultivo.precioVenta;
+
+            // Intentar romper la hoz tras usarla
+            let mensajeExtra = "";
+            if (hoz && hoz.intentarRomper()) {
+                mensajeExtra = "\nLa hoz se ha roto Ve a la Tienda para repararla.";
+            }
+
+            // Comprobar logro: 500 monedas acumuladas vendiendo
+            this.comprobarLogro();
+
             Swal.fire({
                 title: `¡${cultivo.nombre} cosechado!`,
-                text: `+${cultivo.precioVenta} monedas`,
-                icon: "success", timer: 1500, showConfirmButton: false,
+                text: `+${cultivo.precioVenta} monedas${mensajeExtra}`,
+                icon: mensajeExtra ? "warning" : "success",
+                timer: mensajeExtra ? 3000 : 1500,
+                showConfirmButton: false,
                 background: "#1a2a10", color: "#f5c518"
             });
 
