@@ -630,3 +630,69 @@ body {
     .config-container { padding: 20px 16px; }
     .btn-pixel { font-size: 0.5rem; padding: 12px 16px; }
 }
+/* ============================================================
+   SELECCIÓN DE SEMILLA EN EL INVENTARIO
+   ============================================================ */
+
+/* Mensaje de instrucción sobre el inventario */
+.inventario-instruccion {
+    display: block;
+    font-family: var(--font-retro);
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.55);
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+
+/* Mensaje cuando hay una semilla activamente seleccionada */
+.inventario-instruccion.seleccionando {
+    color: var(--color-dorado);
+}
+
+/* Imagen pequeña dentro de cada tarjeta de semilla del inventario */
+.semilla-item-img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    image-rendering: pixelated;
+}
+
+/* Tipo de semilla (hortaliza, fruta…) en la tarjeta */
+.semilla-item-tipo {
+    font-family: var(--font-retro);
+    font-size: 0.8rem;
+    color: #888;
+    letter-spacing: 1px;
+}
+
+/* Estado seleccionado: borde y fondo dorado para la semilla elegida */
+.semilla-seleccionada {
+    border: 2px solid var(--color-dorado) !important;
+    background: rgba(245, 197, 24, 0.18) !important;
+    box-shadow: 0 0 10px rgba(245, 197, 24, 0.45);
+    cursor: pointer;
+    transform: translateY(-2px);
+}
+
+/* Cursor pointer en todas las semillas del inventario */
+.semilla-item {
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, transform 0.1s;
+}
+
+.semilla-item:hover {
+    border-color: var(--color-dorado) !important;
+    color: #fff;
+}
+
+/* Parcela vacía que "acepta" plantar (cuando hay semilla seleccionada) */
+.parcela-disponible {
+    outline: 3px dashed var(--color-dorado);
+    outline-offset: -3px;
+    animation: parpadeoDisponible 1s step-end infinite;
+}
+
+@keyframes parpadeoDisponible {
+    0%, 100% { outline-color: var(--color-dorado); }
+    50%       { outline-color: transparent; }
+}

@@ -1,29 +1,12 @@
 // ============================================================
 // Juego.js
 // Clase principal que orquesta toda la lógica del juego.
-// Se instancia desde Main.js una vez que el DOM está listo.
 // ============================================================
 class Juego {
 
-    /**
-     * Inicializa el juego con los parámetros de configuración elegidos
-     * en la pantalla de configuración de partida.
-     *
-     * @param {Object}   config                    - Objeto con la configuración inicial
-     * @param {string}   config.nombre             - Nombre del granjero
-     * @param {string}   config.granja             - Nombre de la granja
-     * @param {string}   config.dificultad         - "facil" | "normal" | "dificil"
-     * @param {number}   config.tamanoTerreno      - Número de parcelas (4, 8 o 12)
-     * @param {string}   config.cultivoFav         - Cultivo favorito
-     * @param {number}   config.nivelHerram        - Nivel inicial de herramientas (1-3)
-     * @param {Semilla[]} [config.semillasIniciales] - Catálogo de semillas del XML
-     *                                               (se lo pasa Main.js tras cargar el XML)
-     */
     constructor(config) {
-        // ---- Parámetros que dependen de la dificultad ----
         const statsInicio = Juego.calcularStatsPorDificultad(config.dificultad);
 
-        // Crea al granjero con los parámetros iniciales
         this.granjero = new Granjero(
             config.nombre,
             statsInicio.dinero,
@@ -31,27 +14,19 @@ class Juego {
             config.nivelHerram
         );
 
-        // Guarda el nombre de la granja, cultivo favorito y dificultad
         this.nombreGranja = config.granja;
         this.cultivoFav   = config.cultivoFav;
         this.dificultad   = config.dificultad;
+        this.terreno      = new Terreno(config.tamanoTerreno);
 
-        // Crea el terreno con el número de parcelas elegido
-        this.terreno = new Terreno(config.tamanoTerreno);
-
-        // -------------------------------------------------------
-        // CAMBIO FASE 2: el catálogo de semillas viene del XML.
-        // Si por alguna razón no se pasa (ej: partida muy antigua
-        // cargada sin XML), se usa un array vacío y se avisa.
-        // Main.js siempre lo pasará correctamente tras cargarXML().
-        // -------------------------------------------------------
         this.semillasDisponibles = config.semillasIniciales || [];
 
         if (this.semillasDisponibles.length === 0) {
             console.warn("Juego: semillasDisponibles vacío. ¿Se cargó el XML?");
         }
+        
+        this.semillaSeleccionada = null;
 
-        // Referencia al intervalo de crecimiento para poder detenerlo si hace falta
         this.intervaloId = null;
 
         this.iniciarEventos();
@@ -63,16 +38,11 @@ class Juego {
     // MÉTODOS ESTÁTICOS
     // ============================================================
 
-    /**
-     * Devuelve los valores de dinero y energía según la dificultad elegida.
-     * @param {string} dificultad
-     * @returns {{ dinero: number, energia: number }}
-     */
     static calcularStatsPorDificultad(dificultad) {
         switch (dificultad) {
             case "facil":   return { dinero: 200, energia: 150 };
             case "dificil": return { dinero: 50,  energia: 75  };
-            default:        return { dinero: 100, energia: 100 }; // normal
+            default:        return { dinero: 100, energia: 100 };
         }
     }
 
@@ -80,11 +50,8 @@ class Juego {
     // INICIALIZACIÓN
     // ============================================================
 
-    /**
-     * Registra los eventos de los botones de la interfaz del juego.
-     */
     iniciarEventos() {
-        // Botón "Recargar Semillas": añade 2 semillas aleatorias al inventario
+        // Botón "Recargar Semillas"
         document.getElementById("btnRecargar").addEventListener("click", () => {
             for (let i = 0; i < 2; i++) {
                 const random  = Math.floor(Math.random() * this.semillasDisponibles.length);
@@ -99,17 +66,14 @@ class Juego {
             this.guardar();
         });
 
-        // Botón "Tienda": abre la pantalla de tienda
-        // Se crea una nueva instancia de Tienda pasándole this (el juego) y datosXML
-        // datosXML está disponible globalmente porque Main.js lo expone en window
+        // Botón "Tienda"
         document.getElementById("btnTienda").addEventListener("click", () => {
             Menu.mostrarPantalla("pantalla-tienda");
             new Tienda(this, window._datosXML);
         });
 
-        // Botón "Menú Principal": vuelve al menú sin perder la partida en curso
+        // Botón "Menú Principal"
         document.getElementById("btnMenuPrincipal").addEventListener("click", () => {
-            // Detiene el bucle de crecimiento para no consumir recursos
             if (this.intervaloId) {
                 clearInterval(this.intervaloId);
                 this.intervaloId = null;
@@ -122,9 +86,6 @@ class Juego {
     // BUCLE DE JUEGO
     // ============================================================
 
-    /**
-     * Bucle de juego: cada 5 segundos avanza el crecimiento de todos los cultivos.
-     */
     iniciarCrecimiento() {
         this.intervaloId = setInterval(() => {
             this.terreno.parcelas.forEach(parcela => {
@@ -133,17 +94,13 @@ class Juego {
                 }
             });
             this.render();
-        }, 5000); // 5000ms = 5 segundos por ciclo
+        }, 5000);
     }
 
     // ============================================================
-    // RENDER (ACTUALIZACIÓN DE LA INTERFAZ)
+    // RENDER
     // ============================================================
 
-    /**
-     * Redibuja toda la interfaz: info del granjero, inventario,
-     * herramientas y terreno.
-     */
     render() {
         this.mostrarInfo();
         this.mostrarInventario();
@@ -151,9 +108,6 @@ class Juego {
         this.mostrarTerreno();
     }
 
-    /**
-     * Actualiza el bloque de información del granjero en el HTML.
-     */
     mostrarInfo() {
         const info = document.getElementById("info-granjero");
         info.innerHTML = `
@@ -166,41 +120,95 @@ class Juego {
     }
 
     /**
-     * Actualiza el bloque de inventario mostrando las semillas agrupadas por tipo.
+     * Muestra el inventario con semillas clicables.
+     *
+     * NUEVO — SELECCIÓN:
+     *   Cada semilla es un botón individual (no agrupado por nombre).
+     *   Al hacer clic en una se marca como seleccionada (resaltado dorado)
+     *   y se guarda su índice en this.semillaSeleccionada.
+     *   Clicar en la misma semilla seleccionada la deselecciona.
+     *   El mensaje de instrucción cambia según si hay selección o no.
      */
     mostrarInventario() {
-        const inventario = document.getElementById("inventario");
+        const contenedor = document.getElementById("inventario");
 
-        // Agrupa las semillas del inventario por nombre para mostrar cantidades
-        const conteo = {};
-        this.granjero.inventario.forEach(semilla => {
-            conteo[semilla.nombre] = (conteo[semilla.nombre] || 0) + 1;
-        });
+        if (this.granjero.inventario.length === 0) {
+            // Si no hay semillas, limpia la selección por si quedó algo
+            this.semillaSeleccionada = null;
 
-        let itemsHTML = "";
-
-        if (Object.keys(conteo).length === 0) {
-            itemsHTML = `<span style="color:#aaa;">Sin semillas en el inventario.</span>`;
-        } else {
-            Object.entries(conteo).forEach(([nombre, cantidad]) => {
-                itemsHTML += `
-                    <div class="semilla-item">
-                        <span class="semilla-item-nombre">${nombre}</span>
-                        <span class="semilla-item-cantidad">x${cantidad}</span>
-                    </div>
-                `;
-            });
+            contenedor.innerHTML = `
+                <h5>Inventario</h5>
+                <span style="color:#aaa; font-family: var(--font-retro); font-size:1.1rem;">
+                    Sin semillas. Pulsa "Recargar Semillas" o ve a la Tienda.
+                </span>
+            `;
+            return;
         }
 
-        inventario.innerHTML = `
-            <h5>Inventario</h5>
-            <div class="inventario-lista">${itemsHTML}</div>
+        // Mensaje de instrucción dinámico
+        const instruccion = this.semillaSeleccionada !== null
+            ? `<span class="inventario-instruccion seleccionando">
+                   ✅ "${this.granjero.inventario[this.semillaSeleccionada].nombre}" seleccionada
+                   — ahora haz clic en un macetero vacío para plantarla
+               </span>`
+            : `<span class="inventario-instruccion">
+                   👆 Haz clic en una semilla para seleccionarla y luego en un macetero para plantarla
+               </span>`;
+
+        // Una tarjeta por semilla individual (no agrupadas)
+        // para que el jugador pueda elegir cuál plantar
+        const itemsHTML = this.granjero.inventario.map((semilla, index) => {
+            // Clase extra si este índice es el seleccionado
+            const claseSelec = (index === this.semillaSeleccionada)
+                ? "semilla-item semilla-seleccionada"
+                : "semilla-item";
+
+            return `
+                <div class="${claseSelec}"
+                     data-index="${index}"
+                     title="Clic para seleccionar esta semilla">
+                    <img src="${semilla.imgSemilla}"
+                         class="semilla-item-img"
+                         alt="${semilla.nombre}"
+                         onerror="this.style.display='none'">
+                    <span class="semilla-item-nombre">${semilla.nombre}</span>
+                    <span class="semilla-item-tipo">${semilla.tipo || ""}</span>
+                </div>
+            `;
+        }).join("");
+
+        contenedor.innerHTML = `
+            <h5>Inventario <span style="color:#aaa; font-size:0.5rem;">(${this.granjero.inventario.length} semillas)</span></h5>
+            ${instruccion}
+            <div class="inventario-lista mt-2">${itemsHTML}</div>
         `;
+
+        // Registra el evento de clic en cada tarjeta de semilla
+        contenedor.querySelectorAll(".semilla-item").forEach(item => {
+            item.addEventListener("click", () => {
+                const index = parseInt(item.dataset.index);
+                this.seleccionarSemilla(index);
+            });
+        });
     }
 
     /**
-     * Actualiza el bloque de herramientas mostrando nombre, imagen y nivel.
+     * Gestiona la selección/deselección de una semilla del inventario.
+     *
+     * @param {number} index - Índice de la semilla en this.granjero.inventario
      */
+    seleccionarSemilla(index) {
+        if (this.semillaSeleccionada === index) {
+            // Clic en la misma semilla → deselecciona
+            this.semillaSeleccionada = null;
+        } else {
+            // Clic en otra semilla → selecciona la nueva
+            this.semillaSeleccionada = index;
+        }
+        // Solo redibuja el inventario para no interrumpir el juego
+        this.mostrarInventario();
+    }
+
     mostrarHerramientas() {
         const herr  = document.getElementById("herramientas");
         const tools = this.granjero.herramientas;
@@ -221,44 +229,44 @@ class Juego {
         herr.innerHTML = html;
     }
 
-    /**
-     * Redibuja el terreno completo: una card por parcela.
-     */
     mostrarTerreno() {
         const terrenoDiv = document.getElementById("terreno");
         terrenoDiv.innerHTML = "";
 
         this.terreno.parcelas.forEach((parcela, index) => {
-            const col        = document.createElement("div");
-            col.className    = "col-6 col-sm-4 col-md-3";
+            const col  = document.createElement("div");
+            col.className = "col-6 col-sm-4 col-md-3";
 
-            const card       = document.createElement("div");
-            card.className   = "parcela-card";
+            const card = document.createElement("div");
+            card.className = "parcela-card";
 
-            const img        = document.createElement("img");
-            img.className    = "parcela-img";
+            // NUEVO: si hay semilla seleccionada y la parcela está vacía,
+            // añade clase visual para indicar que se puede plantar aquí
+            if (!parcela.cultivo && this.semillaSeleccionada !== null) {
+                card.classList.add("parcela-disponible");
+            }
 
-            const nombre     = document.createElement("div");
+            const img = document.createElement("img");
+            img.className = "parcela-img";
+
+            const nombre = document.createElement("div");
             nombre.className = "parcela-nombre";
 
-            const progresoWrap  = document.createElement("div");
+            const progresoWrap = document.createElement("div");
             progresoWrap.className = "parcela-progreso";
 
-            const progresoBar   = document.createElement("div");
+            const progresoBar = document.createElement("div");
             progresoBar.className = "parcela-progreso-bar";
 
             if (parcela.cultivo) {
                 const fase = parcela.cultivo.obtenerFase();
-
-                // Elige la imagen según la fase del cultivo
                 if (fase === "semilla")   img.src = parcela.cultivo.imgSemilla;
                 if (fase === "creciendo") img.src = parcela.cultivo.imgCreciendo;
                 if (fase === "maduro")    img.src = parcela.cultivo.imgMaduro;
 
-                nombre.textContent       = parcela.cultivo.nombre;
-                progresoBar.style.width  = parcela.cultivo.obtenerPorcentaje() + "%";
+                nombre.textContent      = parcela.cultivo.nombre;
+                progresoBar.style.width = parcela.cultivo.obtenerPorcentaje() + "%";
 
-                // Color de fondo según estado
                 if (parcela.cultivo.estaMaduro()) {
                     card.classList.add("parcela-madura");
                 } else {
@@ -290,31 +298,57 @@ class Juego {
     // ============================================================
 
     /**
-     * Gestiona el clic del jugador sobre una parcela:
-     * - Si está vacía y hay semillas → planta
-     * - Si tiene un cultivo maduro   → cosecha y vende
-     * - Si tiene un cultivo verde    → muestra info
-     * @param {number} index - Índice de la parcela en el array del terreno
+     * Gestiona el clic en una parcela.
+     *
+     * NUEVO — FLUJO CON SELECCIÓN:
+     *   - Parcela vacía + semilla seleccionada → planta esa semilla concreta
+     *   - Parcela vacía + sin selección        → avisa que hay que seleccionar primero
+     *   - Parcela madura                       → cosecha y vende
+     *   - Parcela creciendo                    → muestra info de progreso
+     *
+     * @param {number} index - Índice de la parcela
      */
     interactuarParcela(index) {
         const parcela = this.terreno.parcelas[index];
 
-        if (!parcela.cultivo && this.granjero.inventario.length > 0) {
-            const semilla = this.granjero.inventario.pop();
+        if (!parcela.cultivo) {
+            // ---- Parcela vacía ----
+
+            if (this.granjero.inventario.length === 0) {
+                Swal.fire({
+                    title: "Sin semillas",
+                    text: "No tienes semillas en el inventario. Recarga o ve a la Tienda.",
+                    icon: "warning",
+                    confirmButtonText: "Ok",
+                    background: "#1a2a10",
+                    color: "#f5c518"
+                });
+                return;
+            }
+
+            if (this.semillaSeleccionada === null) {
+                // No hay semilla seleccionada: pide al jugador que elija primero
+                Swal.fire({
+                    title: "Selecciona una semilla",
+                    text: "Haz clic en una semilla del inventario para seleccionarla antes de plantar.",
+                    icon: "info",
+                    confirmButtonText: "Ok",
+                    background: "#1a2a10",
+                    color: "#f5c518"
+                });
+                return;
+            }
+
+            // Extrae la semilla seleccionada del inventario por su índice
+            const semilla = this.granjero.inventario.splice(this.semillaSeleccionada, 1)[0];
+
+            // Limpia la selección tras plantar
+            this.semillaSeleccionada = null;
+
             parcela.plantar(semilla);
 
-        } else if (!parcela.cultivo && this.granjero.inventario.length === 0) {
-            Swal.fire({
-                title: "Sin semillas",
-                text: "No tienes semillas en el inventario. Recarga para obtener más.",
-                icon: "warning",
-                confirmButtonText: "Ok",
-                background: "#1a2a10",
-                color: "#f5c518"
-            });
-            return;
-
-        } else if (parcela.cultivo && parcela.cultivo.estaMaduro()) {
+        } else if (parcela.cultivo.estaMaduro()) {
+            // ---- Parcela madura: cosechar ----
             const cultivo = parcela.recolectar();
             this.granjero.vender(cultivo);
 
@@ -328,12 +362,13 @@ class Juego {
                 color: "#f5c518"
             });
 
-        } else if (parcela.cultivo && !parcela.cultivo.estaMaduro()) {
+        } else {
+            // ---- Parcela creciendo: mostrar progreso ----
             Swal.fire({
                 title: `${parcela.cultivo.nombre}`,
-                text: `Ciclos restantes: ${parcela.cultivo.tiempoRestante}`,
+                text: `Progreso: ${parcela.cultivo.obtenerPorcentaje()}% — Ciclos restantes: ${parcela.cultivo.tiempoRestante}`,
                 icon: "info",
-                timer: 1500,
+                timer: 1800,
                 showConfirmButton: false,
                 background: "#1a2a10",
                 color: "#f5c518"
@@ -348,16 +383,9 @@ class Juego {
     // GUARDADO Y CARGA
     // ============================================================
 
-    /**
-     * Guarda el estado completo de la partida en localStorage como JSON.
-     * NOTA: los datos de semillas (tiempos, precios, imágenes) siguen
-     * guardándose en el JSON para que la partida pueda restaurarse incluso
-     * si el XML cambia en el futuro.
-     */
     guardar() {
         const parcelasSerializadas = this.terreno.parcelas.map(parcela => {
             if (!parcela.cultivo) return null;
-
             return {
                 nombre:         parcela.cultivo.nombre,
                 tiempoTotal:    parcela.cultivo.tiempoTotal,
@@ -386,7 +414,6 @@ class Juego {
                 imgSemilla:       s.imgSemilla,
                 imgCreciendo:     s.imgCreciendo,
                 imgMaduro:        s.imgMaduro,
-                // NUEVO: guardar también precioCompra y tipo del XML
                 precioCompra:     s.precioCompra,
                 tipo:             s.tipo
             })),
@@ -406,23 +433,12 @@ class Juego {
         });
     }
 
-    /**
-     * Carga una partida guardada desde localStorage.
-     * Reconstruye el estado completo del juego.
-     *
-     * CAMBIO FASE 2: recibe el catálogo de semillas del XML como segundo
-     * parámetro para que el juego restaurado también lo tenga disponible.
-     *
-     * @param {Semilla[]} semillasDelXML - Catálogo cargado por DatosXML
-     * @returns {Juego|null}
-     */
     static cargar(semillasDelXML = []) {
         const raw = localStorage.getItem("partidaGranja");
         if (!raw) return null;
 
         const datos = JSON.parse(raw);
 
-        // Reconstruye la instancia con la config guardada + semillas del XML
         const juego = new Juego({
             nombre:            datos.nombre,
             granja:            datos.granja        || "Mi Granja",
@@ -430,24 +446,21 @@ class Juego {
             cultivoFav:        datos.cultivoFav    || "Tomate",
             tamanoTerreno:     datos.tamanoTerreno || 8,
             nivelHerram:       datos.nivelHerram   || 1,
-            semillasIniciales: semillasDelXML        // catálogo del XML
+            semillasIniciales: semillasDelXML
         });
 
-        // Restaura dinero y energía reales
         juego.granjero.dinero  = datos.dinero;
         juego.granjero.energia = datos.energia;
 
-        // Restaura inventario (con precioCompra y tipo si existen en el save)
         juego.granjero.inventario = (datos.inventario || []).map(s =>
             new Semilla(
                 s.nombre, s.tiempoMaduracion, s.precioVenta,
                 s.imgSemilla, s.imgCreciendo, s.imgMaduro,
-                s.precioCompra || 0,  // NUEVO
-                s.tipo         || ""  // NUEVO
+                s.precioCompra || 0,
+                s.tipo         || ""
             )
         );
 
-        // Restaura el estado de cada parcela
         (datos.parcelas || []).forEach((parcelaDatos, i) => {
             if (parcelaDatos && juego.terreno.parcelas[i]) {
                 const semillaTmp = new Semilla(
