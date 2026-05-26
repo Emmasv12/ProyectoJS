@@ -14,6 +14,7 @@ class Herramienta {
         this.nombre = nombre;
         this.nivel  = nivel;
         this.imagen = imagen;
+        this.rota   = false; // false = funciona, true = rota (no se puede usar)
     }
 
     /**
@@ -25,8 +26,29 @@ class Herramienta {
             case 1: return "Básico";
             case 2: return "Mejorado";
             case 3: return "Maestro";
-            case 4: return "Rota";
             default: return "Desconocido";
         }
+    }
+
+    /**
+     * Intenta romper la herramienta con una probabilidad pequeña (10%).
+     * Solo puede romperse si no está ya rota.
+     * @returns {boolean} true si se rompió ahora mismo
+     */
+    intentarRomper() {
+        if (this.rota) return false;
+        // 10% de probabilidad de romperse al usarla
+        if (Math.random() < 0.10) {
+            this.rota = true;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Repara la herramienta (vuelve a estar operativa).
+     */
+    reparar() {
+        this.rota = false;
     }
 }

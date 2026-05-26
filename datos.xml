@@ -2,20 +2,14 @@
 
 <juego xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="datos.xsd">
 
-    <!-- Cada <semilla> define un tipo de cultivo que puede comprarseen la tienda y plantarse en el terreno.-->
     <semillas>
 
         <semilla id="tomate">
             <nombre>Tomate</nombre>
-            <!-- Ciclos que tarda en pasar de semilla a maduro -->
             <tiempoMaduracion>3</tiempoMaduracion>
-            <!-- Precio de compra en la tienda -->
             <precioCompra>5</precioCompra>
-            <!-- Dinero que se obtiene al vender el cultivo cosechado -->
             <precioVenta>20</precioVenta>
-            <!-- Tipo para filtrar por categoría en la tienda -->
             <tipo>hortaliza</tipo>
-            <!-- Rutas de imagen para cada fase visual del cultivo -->
             <imagenes>
                 <semilla>semilla.png</semilla>
                 <creciendo>tomate_creciendo.png</creciendo>
@@ -87,8 +81,8 @@
                 <maduro>girasol_maduro.png</maduro>
             </imagenes>
         </semilla>
-        
-         <semilla id="rosa">
+
+        <semilla id="rosa">
             <nombre>Rosa</nombre>
             <tiempoMaduracion>6</tiempoMaduracion>
             <precioCompra>10</precioCompra>
@@ -100,12 +94,25 @@
                 <maduro>rosa_maduro.png</maduro>
             </imagenes>
         </semilla>
+
+        <!-- NUEVA PLANTA: fresa — fruta grande, tiempo largo, precio alto -->
+        <semilla id="fresa">
+            <nombre>Fresa</nombre>
+            <tiempoMaduracion>8</tiempoMaduracion>
+            <precioCompra>12</precioCompra>
+            <precioVenta>75</precioVenta>
+            <tipo>fruta</tipo>
+            <imagenes>
+                <semilla>semilla.png</semilla>
+                <creciendo>fresa_creciendo.png</creciendo>
+                <maduro>fresa_maduro.png</maduro>
+            </imagenes>
+        </semilla>
+
     </semillas>
 
-    <!-- Cada <herramienta> define los 3 niveles posibles con sus efectos y el coste de mejora para llegar a ese nivel -->
     <herramientas>
 
-        <!-- AZADA: influye en la calidad y el precio de venta -->
         <herramienta id="azada">
             <nombre>Azada</nombre>
             <imagen>azada.png</imagen>
@@ -113,9 +120,7 @@
             <niveles>
                 <nivel numero="1">
                     <nombre>Básico</nombre>
-                    <!-- Multiplicador sobre el precio de venta base -->
                     <bonusPrecioVenta>1.0</bonusPrecioVenta>
-                    <!-- Coste para SUBIR a este nivel (nivel 1 = gratis, ya se tiene) -->
                     <costeMejora>0</costeMejora>
                 </nivel>
                 <nivel numero="2">
@@ -131,7 +136,6 @@
             </niveles>
         </herramienta>
 
-        <!-- REGADERA: reduce el tiempo de maduración -->
         <herramienta id="regadera">
             <nombre>Regadera</nombre>
             <imagen>regadera.png</imagen>
@@ -139,7 +143,6 @@
             <niveles>
                 <nivel numero="1">
                     <nombre>Básico</nombre>
-                    <!-- Ciclos que se restan al tiempo de maduración (0 = sin efecto) -->
                     <bonusReduccionTiempo>0</bonusReduccionTiempo>
                     <costeMejora>0</costeMejora>
                 </nivel>
@@ -156,7 +159,6 @@
             </niveles>
         </herramienta>
 
-        <!-- HOZ: mejora la eficiencia de recolección -->
         <herramienta id="hoz">
             <nombre>Hoz</nombre>
             <imagen>hoz.png</imagen>
@@ -164,7 +166,6 @@
             <niveles>
                 <nivel numero="1">
                     <nombre>Básico</nombre>
-                    <!-- Frutos extra obtenidos al cosechar (0 = solo 1 fruto) -->
                     <bonusFrutosExtra>0</bonusFrutosExtra>
                     <costeMejora>0</costeMejora>
                 </nivel>
