@@ -1,13 +1,6 @@
 // ============================================================
 // Juego.js
 // Clase principal que orquesta toda la lógica del juego.
-//
-// MEJORAS PARA CUMPLIR RÚBRICA:
-//   · mostrarTerreno() muestra estado textual + ciclos restantes
-//     en cada card, visible siempre (sin depender de imágenes)
-//   · Indicadores de estado claros: emoji + texto + barra + número
-//   · interactuarParcela() informa si plantar() falla (parcela ocupada)
-//   · semillaSeleccionada: flujo de selección antes de plantar
 // ============================================================
 class Juego {
 
@@ -122,6 +115,7 @@ class Juego {
         this.mostrarInventario();
         this.mostrarHerramientas();
         this.mostrarTerreno();
+        this.comprobarLogro();
     }
 
     mostrarInfo() {
@@ -135,10 +129,6 @@ class Juego {
         `;
     }
 
-    /**
-     * Muestra el inventario con semillas individuales y clicables.
-     * El jugador selecciona una semilla aquí antes de plantar.
-     */
     mostrarInventario() {
         const contenedor = document.getElementById("inventario");
 
@@ -200,7 +190,7 @@ class Juego {
         let html = `<h5>Herramientas</h5><div class="herramientas-lista">`;
         Object.values(tools).forEach(h => {
             const estadoHTML = h.rota
-                ? `<span class="herramienta-rota">ROTA</span>` //Mensaje de que la herramienta se ha roto
+                ? `<span class="herramienta-rota">⚠ ROTA — Repara en la Tienda</span>`
                 : `<span class="herramienta-nivel">Nv.${h.nivel} — ${h.obtenerDescripcionNivel()}</span>`;
             html += `
                 <div class="herramienta-item${h.rota ? " herramienta-item-rota" : ""}">
@@ -214,15 +204,6 @@ class Juego {
         herr.innerHTML = html;
     }
 
-    /**
-     * Dibuja el terreno con indicadores visuales de estado completos:
-     *   [ ] Vacía        → macetero, texto "Vacía", instruccion si hay semilla seleccionada
-     *   [S] Semilla       → imagen + nombre + barra + "X ciclos restantes"
-     *   [C] Creciendo     → imagen + nombre + barra + "X ciclos restantes"
-     *   [M] Maduro        → imagen + nombre + "Lista para cosechar!" + barra al 100%
-     *
-     * Los emojis y textos garantizan legibilidad aunque las imágenes no carguen.
-     */
     mostrarTerreno() {
         const terrenoDiv = document.getElementById("terreno");
         terrenoDiv.innerHTML = "";
@@ -234,7 +215,6 @@ class Juego {
             const card = document.createElement("div");
             card.className = "parcela-card";
 
-            // Borde parpadeante en maceteros vacíos cuando hay semilla seleccionada
             if (!parcela.cultivo && this.semillaSeleccionada !== null) {
                 card.classList.add("parcela-disponible");
             }
@@ -246,24 +226,20 @@ class Juego {
                 const fase = c.obtenerFase();
                 const pct  = c.obtenerPorcentaje();
 
-                // Emoji de estado según fase — visible siempre
                 const emojiFase = {
                     semilla:   "[S]",
                     creciendo: "[C]",
                     maduro:    "[M]"
                 }[fase] || "[S]";
 
-                // Texto de estado
                 const textoEstado = c.estaMaduro()
                     ? `<span class="parcela-estado-texto maduro">¡Lista para cosechar!</span>`
                     : `<span class="parcela-estado-texto">${c.tiempoRestante} ciclo${c.tiempoRestante !== 1 ? "s" : ""} restante${c.tiempoRestante !== 1 ? "s" : ""}</span>`;
 
-                // Imagen según fase (con fallback al emoji si no carga)
                 const imgSrc = fase === "semilla"   ? c.imgSemilla
                              : fase === "creciendo" ? c.imgCreciendo
                              : c.imgMaduro;
 
-                // Clase de color de card según estado
                 const claseCard = c.estaMaduro() ? "parcela-madura" : "parcela-creciendo";
                 card.classList.add(claseCard);
 
@@ -286,7 +262,6 @@ class Juego {
                     : `<span class="parcela-hint">Vacía</span>`;
 
                 innerHTML = `
-                    
                     <img class="parcela-img" src="maceta.png" alt="Maceta"
                          onerror="this.style.display='none'">
                     ${hint}
@@ -299,7 +274,27 @@ class Juego {
 
             card.innerHTML = innerHTML;
 
+            // Click izquierdo: interactuar (plantar / cosechar)
             card.addEventListener("click", () => this.interactuarParcela(index));
+
+            // ============================================================
+            // CLICK DERECHO: reinicia la parcela (borra el cultivo)
+            // ============================================================
+            card.addEventListener("contextmenu", (event) => {
+                event.preventDefault(); // evita el menú del navegador
+                if (parcela.cultivo) {
+                    parcela.cultivo = null;
+                    this.render();
+                    Swal.fire({
+                        title: "Parcela reiniciada",
+                        text: "El cultivo ha sido eliminado.",
+                        icon: "info",
+                        timer: 1200,
+                        showConfirmButton: false,
+                        background: "#1a2a10", color: "#f5c518"
+                    });
+                }
+            });
 
             col.appendChild(card);
             terrenoDiv.appendChild(col);
@@ -310,14 +305,6 @@ class Juego {
     // INTERACCIÓN CON PARCELAS
     // ============================================================
 
-    /**
-     * Lógica de clic en parcela:
-     *   - Vacía + semilla seleccionada → planta (garantizado, sin random)
-     *   - Vacía + sin selección        → pide seleccionar semilla primero
-     *   - Vacía + inventario vacío     → pide recargar
-     *   - Madura                       → cosecha y vende
-     *   - Creciendo                    → muestra progreso detallado
-     */
     interactuarParcela(index) {
         const parcela = this.terreno.parcelas[index];
 
@@ -346,6 +333,24 @@ class Juego {
             const semilla = this.granjero.inventario.splice(this.semillaSeleccionada, 1)[0];
             this.semillaSeleccionada = null;
 
+            // ============================================================
+            // PROBABILIDAD DE FALLO AL PLANTAR (20%)
+            // Math.random() devuelve un número en [0, 1)
+            // Si es menor que 0.20 la semilla falla y se pierde
+            // ============================================================
+            if (Math.random() < 0.20) {
+                Swal.fire({
+                    title: "¡Vaya! La semilla no ha prendido",
+                    text: `La semilla de ${semilla.nombre} se ha malogrado al plantarla. ¡Mala suerte!`,
+                    icon: "error",
+                    timer: 2500,
+                    showConfirmButton: false,
+                    background: "#1a2a10", color: "#f5c518"
+                });
+                this.render();
+                return; // semilla perdida, parcela sigue vacía
+            }
+
             parcela.plantar(semilla);
 
         } else if (parcela.cultivo.estaMaduro()) {
@@ -354,7 +359,7 @@ class Juego {
             if (hoz && hoz.rota) {
                 Swal.fire({
                     title: "Hoz rota",
-                    text: "No puedes recolectar: la hoz está rota. Reparala en la Tienda.",
+                    text: "No puedes recolectar: la hoz está rota. Repárala en la Tienda.",
                     icon: "error", confirmButtonText: "Ok",
                     background: "#1a2a10", color: "#f5c518"
                 });
@@ -364,17 +369,14 @@ class Juego {
             const cultivo = parcela.recolectar();
             this.granjero.vender(cultivo);
 
-            // Acumular dinero ganado para el logro
+            // Acumula dinero ganado para el logro
             this.totalGanado += cultivo.precioVenta;
 
-            // Intentar romper la hoz tras usarla
+            // Intento de rotura de la hoz tras usarla
             let mensajeExtra = "";
             if (hoz && hoz.intentarRomper()) {
-                mensajeExtra = "\nLa hoz se ha roto Ve a la Tienda para repararla.";
+                mensajeExtra = "\n⚠ La hoz se ha roto. Ve a la Tienda para repararla.";
             }
-
-            // Comprobar logro: 500 monedas acumuladas vendiendo
-            this.comprobarLogro();
 
             Swal.fire({
                 title: `¡${cultivo.nombre} cosechado!`,
@@ -400,6 +402,42 @@ class Juego {
     }
 
     // ============================================================
+    // LOGRO: ganar 500 monedas vendiendo cultivos
+    // ============================================================
+
+    comprobarLogro() {
+        if (this.logroMostrado) return;
+        if (this.totalGanado >= 500) {
+            this.logroMostrado = true;
+            this._mostrarLogro();
+        }
+    }
+
+    _mostrarLogro() {
+        // Crea el banner de logro si no existe ya
+        let banner = document.getElementById("logro-banner");
+        if (!banner) {
+            banner = document.createElement("div");
+            banner.id = "logro-banner";
+            banner.innerHTML = `
+                <div class="logro-icono">🏆</div>
+                <div class="logro-texto">
+                    <div class="logro-titulo">¡LOGRO DESBLOQUEADO!</div>
+                    <div class="logro-desc">Granjero Próspero — Ganaste 500 monedas vendiendo cultivos</div>
+                </div>
+            `;
+            document.getElementById("pantalla-juego").appendChild(banner);
+
+            // Animación de entrada
+            requestAnimationFrame(() => {
+                banner.classList.add("logro-visible");
+            });
+
+            // Se queda fijo en pantalla (no desaparece)
+        }
+    }
+
+    // ============================================================
     // GUARDADO Y CARGA
     // ============================================================
 
@@ -413,6 +451,15 @@ class Juego {
             energia:       this.granjero.energia,
             tamanoTerreno: this.terreno.parcelas.length,
             nivelHerram:   this.granjero.herramientas.azada.nivel,
+            totalGanado:   this.totalGanado,
+            logroMostrado: this.logroMostrado,
+
+            // Guarda estado de rotura de herramientas
+            herramientasRotas: {
+                azada:    this.granjero.herramientas.azada.rota,
+                regadera: this.granjero.herramientas.regadera.rota,
+                hoz:      this.granjero.herramientas.hoz.rota
+            },
 
             inventario: this.granjero.inventario.map(s => ({
                 nombre:           s.nombre,
@@ -461,11 +508,20 @@ class Juego {
             cultivoFav:        datos.cultivoFav    || "Tomate",
             tamanoTerreno:     datos.tamanoTerreno || 8,
             nivelHerram:       datos.nivelHerram   || 1,
-            semillasIniciales: semillasDelXML
+            semillasIniciales: semillasDelXML,
+            totalGanado:       datos.totalGanado   || 0,
+            logroMostrado:     datos.logroMostrado || false
         });
 
         juego.granjero.dinero  = datos.dinero;
         juego.granjero.energia = datos.energia;
+
+        // Restaura estado de rotura de herramientas
+        if (datos.herramientasRotas) {
+            juego.granjero.herramientas.azada.rota    = datos.herramientasRotas.azada    || false;
+            juego.granjero.herramientas.regadera.rota = datos.herramientasRotas.regadera || false;
+            juego.granjero.herramientas.hoz.rota      = datos.herramientasRotas.hoz      || false;
+        }
 
         juego.granjero.inventario = (datos.inventario || []).map(s =>
             new Semilla(

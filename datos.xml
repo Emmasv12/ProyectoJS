@@ -87,7 +87,19 @@
                 <maduro>girasol_maduro.png</maduro>
             </imagenes>
         </semilla>
-
+        
+         <semilla id="rosa">
+            <nombre>Rosa</nombre>
+            <tiempoMaduracion>6</tiempoMaduracion>
+            <precioCompra>10</precioCompra>
+            <precioVenta>50</precioVenta>
+            <tipo>especial</tipo>
+            <imagenes>
+                <semilla>semilla.png</semilla>
+                <creciendo>rosa_creciendo.png</creciendo>
+                <maduro>rosa_maduro.png</maduro>
+            </imagenes>
+        </semilla>
     </semillas>
 
     <!-- Cada <herramienta> define los 3 niveles posibles con sus efectos y el coste de mejora para llegar a ese nivel -->
