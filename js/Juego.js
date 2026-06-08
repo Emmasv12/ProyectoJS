@@ -375,7 +375,7 @@ class Juego {
             // Intento de rotura de la hoz tras usarla
             let mensajeExtra = "";
             if (hoz && hoz.intentarRomper()) {
-                mensajeExtra = "\n⚠ La hoz se ha roto. Ve a la Tienda para repararla.";
+                mensajeExtra = "\nLa hoz se ha roto. Ve a la Tienda para repararla.";
             }
 
             Swal.fire({
