@@ -190,7 +190,7 @@ class Juego {
         let html = `<h5>Herramientas</h5><div class="herramientas-lista">`;
         Object.values(tools).forEach(h => {
             const estadoHTML = h.rota
-                ? `<span class="herramienta-rota">⚠ ROTA — Repara en la Tienda</span>`
+                ? `<span class="herramienta-rota">ROTA — Repara en la Tienda</span>`
                 : `<span class="herramienta-nivel">Nv.${h.nivel} — ${h.obtenerDescripcionNivel()}</span>`;
             html += `
                 <div class="herramienta-item${h.rota ? " herramienta-item-rota" : ""}">
@@ -422,7 +422,7 @@ class Juego {
             banner.innerHTML = `
                 <div class="logro-icono">🏆</div>
                 <div class="logro-texto">
-                    <div class="logro-titulo">¡LOGRO DESBLOQUEADO!</div>
+                    <div class="logro-titulo">LOGRO DESBLOQUEADO!</div>
                     <div class="logro-desc">Granjero Próspero — Ganaste 500 monedas vendiendo cultivos</div>
                 </div>
             `;
