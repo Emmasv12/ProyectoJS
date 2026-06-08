@@ -109,6 +109,19 @@
             </imagenes>
         </semilla>
 
+        <semilla id="fresa2">
+            <nombre>fresa2</nombre>
+            <tiempoMaduracion>3</tiempoMaduracion>
+            <precioCompra>17</precioCompra>
+            <precioVenta>20</precioVenta>
+            <tipo>fruta</tipo>
+            <imagenes>
+                <semilla>semilla.png</semilla>
+                <creciendo>fresa_creciendo.png</creciendo>
+                <maduro>fresa_maduro.png</maduro>
+            </imagenes>
+        </semilla>
+
     </semillas>
 
     <herramientas>

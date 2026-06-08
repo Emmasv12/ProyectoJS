@@ -116,6 +116,7 @@ class Juego {
         this.mostrarHerramientas();
         this.mostrarTerreno();
         this.comprobarLogro();
+        this.comprobarLogro2;
     }
 
     mostrarInfo() {
@@ -413,6 +414,14 @@ class Juego {
         }
     }
 
+    comprobarLogro2() {
+        if (this.logroMostrado) return;
+        if (this.vender >= 10) {
+            this.logroMostrado = true;
+            this._mostrarLogro2();
+        }
+    }
+
     _mostrarLogro() {
         // Crea el banner de logro si no existe ya
         let banner = document.getElementById("logro-banner");
@@ -424,6 +433,30 @@ class Juego {
                 <div class="logro-texto">
                     <div class="logro-titulo">LOGRO DESBLOQUEADO!</div>
                     <div class="logro-desc">Granjero Próspero — Ganaste 500 monedas vendiendo cultivos</div>
+                </div>
+            `;
+            document.getElementById("pantalla-juego").appendChild(banner);
+
+            // Animación de entrada
+            requestAnimationFrame(() => {
+                banner.classList.add("logro-visible");
+            });
+
+            // Se queda fijo en pantalla (no desaparece)
+        }
+    }
+
+    _mostrarLogro2() {
+        // Crea el banner de logro si no existe ya
+        let banner = document.getElementById("logro-banner");
+        if (!banner) {
+            banner = document.createElement("div");
+            banner.id = "logro-banner";
+            banner.innerHTML = `
+                <div class="logro-icono">🏆</div>
+                <div class="logro-texto">
+                    <div class="logro-titulo">LOGRO DESBLOQUEADO!</div>
+                    <div class="logro-desc">Granjero aprendiz — Ganaste 500 monedas vendiendo cultivos</div>
                 </div>
             `;
             document.getElementById("pantalla-juego").appendChild(banner);
@@ -453,6 +486,7 @@ class Juego {
             nivelHerram:   this.granjero.herramientas.azada.nivel,
             totalGanado:   this.totalGanado,
             logroMostrado: this.logroMostrado,
+            vender:        this.vender,
 
             // Guarda estado de rotura de herramientas
             herramientasRotas: {
